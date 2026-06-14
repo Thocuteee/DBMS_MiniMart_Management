@@ -10,7 +10,7 @@ import java.sql.SQLException;
 @Repository
 public class BanHangRepository {
     public void GiaoTacBanHang(String maHD, String maNV, String maKH, String maKho, String maSP, int soLuong, double donGia) throws SQLException {
-        String sql = "{call GiaoTacBanHang(?, ?, ?, ?, ?, ?, ?)}";
+        String sql = "{call sp_GiaoTacBanHang(?, ?, ?, ?, ?, ?, ?)}";
         try(Connection con = DatabaseConnection.getConnection(); CallableStatement cstmt = con.prepareCall(sql)) {
             // Set tham so maHD, maNV, maKH, maKho, maSP, soLuong, donGia
             cstmt.setString(1, maHD);

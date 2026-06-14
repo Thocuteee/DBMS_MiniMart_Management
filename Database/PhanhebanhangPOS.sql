@@ -39,7 +39,7 @@ BEGIN
         --b4. Khấu trừ số lượng tồn kho của sản phẩm
         UPDATE TonKho
         SET SoLuongTonkho = SoLuongTonKho - @SoLuong 
-        WHERE MaSP = @MaSP;
+        WHERE MaKho = @MaKho AND MaSP = @MaSP;
 
         COMMIT TRAN; 
         PRINT N'Giao tác bán hàng hoàn tất thành công!';
@@ -68,7 +68,7 @@ BEGIN
     -- cập nhật tổng tiền của bảng HOADON
     UPDATE HOADON
     SET TongTien = (SELECT SUM(ThanhTien) FROM ChiTietHoaDon WHERE ChiTietHoaDon.MaHD = HOADON.MaHD),
-        ThanhTien = (SELECT SUM(ThanhTien) FROM ChiTietHoaDon WHERE ChiTietHoaDon.MaHD = HOADON.MaHD) - GiamGia
+        ThanhTien = (SELECT SUM(ThanhTien) FROM ChiTietHoaDon WHERE ChiTietHoaDon.MaHD = HOADON.MaHD) - ISNULL(GiamGia, 0)
     WHERE MaHD IN (SELECT MaHD FROM inserted);
 END;
 GO
