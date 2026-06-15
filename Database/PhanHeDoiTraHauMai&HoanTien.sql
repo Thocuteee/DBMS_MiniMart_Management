@@ -9,7 +9,7 @@ USE QuanLySieuThiMini;
 GO
 
 -- =======================================================
--- PHẦN 1: XÂY DỰNG NỀN MÓNG CÁC BẢNG (Gồm cả bảng của Toàn)
+-- PHẦN 1: XÂY DỰNG NỀN MÓNG CÁC BẢNG 
 -- =======================================================
 CREATE TABLE KhachHang(
     MaKH varchar(10) PRIMARY KEY,
