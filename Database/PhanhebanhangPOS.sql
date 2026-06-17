@@ -1,4 +1,15 @@
+USE [QuanLySieuThiMini];
+GO
+
+-- Xóa đối tượng cũ để nạp lại sạch sẽ
+IF OBJECT_ID('dbo.sp_GiaoTacBanHang', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_GiaoTacBanHang;
+IF OBJECT_ID('dbo.trg_TinhThanhTienChiTietHD', 'TR') IS NOT NULL DROP TRIGGER dbo.trg_TinhThanhTienChiTietHD;
+GO
+
+-- ============================================================
 -- 1. TẠO GIAO TÁC BÁN HÀNG
+-- ============================================================
+
 CREATE PROCEDURE sp_GiaoTacBanHang
     @MaHD VARCHAR(15),        
     @MaNV VARCHAR(10),        
@@ -13,6 +24,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRAN;
         -- b1. Kiểm tra xem sản phẩm có đủ hàng tồn để bán không
+
         DECLARE @TonKhoHienTai INT;
 
         SELECT @TonKhoHienTai = SoLuongTonKho 
@@ -21,10 +33,11 @@ BEGIN
 
         IF @TonKhoHienTai IS NULL OR @TonKhoHienTai < @SoLuong
         BEGIN
-            RAISERROR(N'Lỗi: Số lượng tồn kho không đủ để bán mặt hàng này!', 16, 1);
+            ;THROW 50001, N'Lỗi: Số lượng tồn kho không đủ để bán mặt hàng này!', 1;
         END
 
         --b2. Tạo Hóa đơn tổng nếu chưa tồn tại (Dành cho giỏ hàng có nhiều món)
+
         IF NOT EXISTS (SELECT 1 FROM HOADON WHERE MaHD = @MaHD)
         BEGIN
             INSERT INTO HOADON (MaHD, NgayLap, MaNV, MaKH, TongTien, GiamGia, ThanhTien)
@@ -46,15 +59,22 @@ BEGIN
     END TRY
 
     BEGIN CATCH
-        ROLLBACK TRAN; 
-        -- In ra thông báo lỗi chi tiết để debug hoặc hiện lên App
+        -- Bốc thông điệp lỗi gốc lưu vào biến trước khi thực hiện hành động hủy giao tác
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        RAISERROR(@ErrorMessage, 16, 1);
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
+
+        IF @@TRANCOUNT > 0 ROLLBACK TRAN; 
+        
+        RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
     END CATCH
 END;
 GO
 
+-- ============================================================
 -- 2. TẠO TRIGGER TỰ ĐỘNG TÍNH TIỀN TRONG CHI TIẾT HÓA ĐƠN
+-- ============================================================
+
 CREATE TRIGGER trg_TinhThanhTienChiTietHD
 ON ChiTietHoaDon
 AFTER INSERT, UPDATE
@@ -124,8 +144,10 @@ BEGIN
 END
 ELSE
 BEGIN
-    INSERT INTO HOADON (MaHD, MaNV) VALUES ('HD_TEST_02', @MaNV);
+    INSERT INTO HOADON (MaHD, NgayLap, MaNV, MaKH, TongTien, GiamGia, ThanhTien) 
+    VALUES ('HD_TEST_02', GETDATE(), @MaNV, 'KH01', 0, 0, 0);
 END
+GO
 
 -- KIỂM TRA:
 SELECT * FROM HOADON WHERE MaHD = 'HD_TEST_02';
