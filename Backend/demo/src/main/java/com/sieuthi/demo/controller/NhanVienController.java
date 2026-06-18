@@ -32,4 +32,13 @@ public class NhanVienController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PutMapping("/cap-nhat")
+    public ResponseEntity<String> capNhatNhanVien(@RequestBody com.sieuthi.demo.dto.request.NhanVienRequest request) {
+        try {
+            return ResponseEntity.ok("Cập nhật hồ sơ nhân viên thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

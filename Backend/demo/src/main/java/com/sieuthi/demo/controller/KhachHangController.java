@@ -47,4 +47,13 @@ public class KhachHangController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PutMapping("/sua")
+    public ResponseEntity<String> suaKhachHang(@RequestBody com.sieuthi.demo.dto.request.KhachHangRequest request) {
+        try {
+            return ResponseEntity.ok("Cập nhật thông tin khách hàng thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
