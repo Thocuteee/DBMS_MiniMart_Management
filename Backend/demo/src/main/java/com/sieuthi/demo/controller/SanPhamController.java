@@ -30,4 +30,13 @@ public class SanPhamController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PutMapping("/cap-nhat-gia")
+    public ResponseEntity<String> capNhatGiaBan(@RequestParam String maSP, @RequestParam double giaMoi) {
+        try {
+            return ResponseEntity.ok("Đã cập nhật giá bán mới cho sản phẩm " + maSP);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
