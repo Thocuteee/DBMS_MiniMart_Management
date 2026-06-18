@@ -182,9 +182,16 @@ BEGIN
         DECLARE @DonGiaBan money;
         DECLARE @MaKH varchar(10);
 
-        SELECT @SoLuongDaMua = SoLuong, @DonGiaBan = DonGiaBan
-        FROM [dbo].[ChiTietHoaDon]
-        WHERE MaHD = @MaHD AND MaSP = @MaSP;
+        -- !! CANH BAO QUAN TRONG !!
+        -- TUYET DOI phai lay DonGiaBan tu bang ChiTietHoaDon (gia tai thoi diem mua).
+        -- KHONG DUOC lay tu bang SanPham.GiaBan (gia hien hanh co the da thay doi).
+        -- VD: Khach mua khuyen mai 40k, tuan sau het KM gia tang 60k,
+        --     neu lay SanPham.GiaBan = 60k -> thoi tien 60k thay vi 40k -> THAT THOAT!
+        -- LICH SU: 2026-06-18 - Xac nhan dung nguon gia tu ChiTietHoaDon
+        SELECT @SoLuongDaMua = cthd.SoLuong,
+               @DonGiaBan    = cthd.DonGiaBan    -- Gia lich su tai thoi diem khach mua
+        FROM [dbo].[ChiTietHoaDon] AS cthd
+        WHERE cthd.MaHD = @MaHD AND cthd.MaSP = @MaSP;
 
         SELECT @MaKH = MaKH FROM [dbo].[HoaDon] WHERE MaHD = @MaHD;
 
