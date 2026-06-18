@@ -49,7 +49,7 @@ public class KhachHangController {
     }
 
     @PutMapping("/sua")
-    public ResponseEntity<String> suaKhachHang(@RequestBody com.sieuthi.demo.dto.request.KhachHangRequest request) {
+    public ResponseEntity<String> suaKhachHang(@RequestBody KhachHangRequest request) {
         try {
             return ResponseEntity.ok("Cập nhật thông tin khách hàng thành công!");
         } catch (Exception e) {

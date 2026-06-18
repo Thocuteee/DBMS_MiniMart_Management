@@ -1,0 +1,57 @@
+package com.sieuthi.demo.security;
+
+import com.sieuthi.demo.model.NhanVien;
+import com.sieuthi.demo.dto.response.KhachHangResponse;
+import com.sieuthi.demo.repository.NhanVienRepository;
+import com.sieuthi.demo.repository.KhachHangRepository;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.List;
+
+@Service
+public class UserDetailsServiceImpl implements UserDetailsService {
+
+    private final NhanVienRepository nhanVienRepository;
+    private final KhachHangRepository khachHangRepository;
+
+    public UserDetailsServiceImpl(NhanVienRepository nhanVienRepository, KhachHangRepository khachHangRepository) {
+        this.nhanVienRepository = nhanVienRepository;
+        this.khachHangRepository = khachHangRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        try {
+            // First check if it's a NhanVien (by UserName)
+            NhanVien nv = nhanVienRepository.findByUserName(username);
+            if (nv != null) {
+                // Determine Role
+                String roleStr = nv.getRole() != null && nv.getRole().equalsIgnoreCase("Quản Lý") ? "ROLE_ADMIN" : "ROLE_NHAN_VIEN";
+                // Alternatively check "Admin" string if you prefer. Using standard role mapping.
+                if (username.equals("admin")) roleStr = "ROLE_ADMIN"; // Fallback for pure admin account
+
+                List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(roleStr));
+                return new CustomUserDetails(nv.getUserName(), nv.getPassword(), authorities);
+            }
+
+            // If not NhanVien, check if it's a KhachHang (by Phone)
+            // KhachHang doesn't have a dedicated password column, we assume password = phone for simplicity in this demo
+            KhachHangResponse kh = khachHangRepository.findByPhone(username);
+            if (kh != null) {
+                List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_KHACH_HANG"));
+                return new CustomUserDetails(kh.getPhone(), kh.getPhone(), authorities);
+            }
+
+        } catch (Exception e) {
+            throw new UsernameNotFoundException("Database error: " + e.getMessage());
+        }
+
+        throw new UsernameNotFoundException("User Not Found with username: " + username);
+    }
+}

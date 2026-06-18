@@ -3,6 +3,7 @@ package com.sieuthi.demo.repository;
 import com.sieuthi.demo.config.DatabaseConnection;
 import com.sieuthi.demo.dto.request.NhanVienRequest;
 import com.sieuthi.demo.dto.response.NhanVienResponse;
+import com.sieuthi.demo.model.NhanVien;
 import org.springframework.stereotype.Repository;
 import java.sql.*;
 import java.util.ArrayList;
@@ -30,6 +31,29 @@ public class NhanVienRepository {
             }
         }
         return list;
+    }
+
+    public NhanVien findByUserName(String userName) throws SQLException {
+        String sql = "SELECT * FROM NhanVien WHERE UserName = ?";
+        try (Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, userName);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    NhanVien res = new NhanVien();
+                    res.setMaNV(rs.getString("MaNV"));
+                    res.setHoTen(rs.getString("HoTen"));
+                    res.setPhone(rs.getString("Phone"));
+                    res.setRole(rs.getString("Role"));
+                    res.setUserName(rs.getString("UserName"));
+                    boolean statusVal = rs.getBoolean("Status");
+                    res.setStatus(rs.wasNull() ? null : (statusVal ? "Hoạt động" : "Nghỉ việc")); // map boolean to string since model has String status
+                    res.setPassword(rs.getString("Password")); 
+                    return res;
+                }
+            }
+        }
+        return null;
     }
 
     public void save(NhanVienRequest req) throws SQLException {
