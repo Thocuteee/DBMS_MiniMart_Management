@@ -9,6 +9,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -32,8 +34,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             NhanVien nv = nhanVienRepository.findByUserName(username);
             if (nv != null) {
                 // Determine Role
-                String roleStr = nv.getRole() != null && nv.getRole().equalsIgnoreCase("Quản Lý") ? "ROLE_ADMIN" : "ROLE_NHAN_VIEN";
-                // Alternatively check "Admin" string if you prefer. Using standard role mapping.
+                String rawRole = nv.getRole();
+                String roleStr = "ROLE_NHAN_VIEN"; // Default
+
+                if (rawRole != null) {
+                    if (rawRole.equals("1") || rawRole.equalsIgnoreCase("Quản Lý") || rawRole.equalsIgnoreCase("Admin")) {
+                        roleStr = "ROLE_ADMIN";
+                    } else if (rawRole.equals("2") || rawRole.equalsIgnoreCase("Nhân Viên")) {
+                        roleStr = "ROLE_NHAN_VIEN";
+                    }
+                }
+
                 if (username.equals("admin")) roleStr = "ROLE_ADMIN"; // Fallback for pure admin account
 
                 List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(roleStr));
@@ -45,7 +56,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             KhachHangResponse kh = khachHangRepository.findByPhone(username);
             if (kh != null) {
                 List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_KHACH_HANG"));
-                return new CustomUserDetails(kh.getPhone(), kh.getPhone(), authorities);
+                PasswordEncoder encoder = new BCryptPasswordEncoder();
+                return new CustomUserDetails(kh.getPhone(), encoder.encode(kh.getPhone()), authorities);
             }
 
         } catch (Exception e) {

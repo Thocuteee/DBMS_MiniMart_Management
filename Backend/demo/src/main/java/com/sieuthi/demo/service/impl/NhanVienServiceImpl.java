@@ -1,9 +1,12 @@
 package com.sieuthi.demo.service.impl;
 
 import com.sieuthi.demo.dto.request.NhanVienRequest;
+import com.sieuthi.demo.dto.request.NhanVienRequest;
 import com.sieuthi.demo.dto.response.NhanVienResponse;
 import com.sieuthi.demo.repository.NhanVienRepository;
 import com.sieuthi.demo.service.NhanVienService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.sql.SQLException;
 import java.util.List;
@@ -28,9 +31,25 @@ public class NhanVienServiceImpl implements NhanVienService {
     @Override
     public void themNhanVien(NhanVienRequest request) {
         try {
+            if (request.getMaNV() == null || request.getMaNV().trim().isEmpty()) {
+                request.setMaNV(nhanVienRepository.generateNewMaNV());
+            }
+            if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
+                PasswordEncoder encoder = new BCryptPasswordEncoder();
+                request.setPassword(encoder.encode(request.getPassword()));
+            }
             nhanVienRepository.save(request);
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi thêm mới nhân viên: " + e.getMessage());
+            throw new RuntimeException("Lỗi thêm nhân viên: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void xoaNhanVien(String maNV) {
+        try {
+            nhanVienRepository.delete(maNV);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi xóa nhân viên: " + e.getMessage());
         }
     }
 }

@@ -30,6 +30,9 @@ public class KhachHangServiceImpl implements KhachHangService {
     @Override
     public void themKhachHang(KhachHangRequest request) {
         try {
+            if (request.getMaKH() == null || request.getMaKH().trim().isEmpty()) {
+                request.setMaKH(khachHangRepository.generateNewMaKH());
+            }
             khachHangRepository.save(request);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi đăng ký khách hàng: " + e.getMessage());
@@ -42,6 +45,14 @@ public class KhachHangServiceImpl implements KhachHangService {
             return khachHangRepository.findAll();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi truy vấn khách hàng: " + e.getMessage());
+        }
+    }
+
+    public void xoaKhachHang(String maKH) {
+        try {
+            khachHangRepository.delete(maKH);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi xóa khách hàng: " + e.getMessage());
         }
     }
 }

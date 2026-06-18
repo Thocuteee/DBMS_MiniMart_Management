@@ -8,4 +8,5 @@ import com.sieuthi.demo.dto.response.NhanVienResponse;
 public interface NhanVienService {
     List<NhanVienResponse> layTatCaNhanVien();
     void themNhanVien(NhanVienRequest request);
+    void xoaNhanVien(String maNV);
 }

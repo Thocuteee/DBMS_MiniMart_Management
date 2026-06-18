@@ -9,4 +9,5 @@ public interface KhachHangService {
     KhachHangResponse timKhachHangTheoPhone(String phone);
     void themKhachHang(KhachHangRequest request);
     List<KhachHangResponse> layTatCaKhachHang();
+    void xoaKhachHang(String maKH);
 }

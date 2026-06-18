@@ -41,4 +41,14 @@ public class NhanVienController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @DeleteMapping("/{maNV}")
+    public ResponseEntity<String> xoaNhanVien(@PathVariable String maNV) {
+        try {
+            nhanVienService.xoaNhanVien(maNV);
+            return ResponseEntity.ok("Xóa nhân viên thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

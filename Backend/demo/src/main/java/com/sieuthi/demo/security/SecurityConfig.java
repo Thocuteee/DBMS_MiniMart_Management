@@ -7,7 +7,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -33,9 +33,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Since the current database stores plain text passwords, we use NoOpPasswordEncoder for now.
-        // In a real application, you MUST use BCryptPasswordEncoder.
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
@@ -44,12 +42,16 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
-                // Admin has full control
                 .requestMatchers(HttpMethod.POST, "/api/v1/nhan-vien").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/v1/nhan-vien/**", "/api/v1/nhan-vien").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/nhan-vien/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/nhan-vien/**").hasRole("ADMIN")
-                // Others need to be authenticated
+                .requestMatchers(HttpMethod.POST, "/api/v1/khach-hang/dang-ky").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers(HttpMethod.GET, "/api/v1/khach-hang/**", "/api/v1/khach-hang").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/khach-hang/**").hasAnyRole("ADMIN", "NHAN_VIEN", "KHACH_HANG")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/khach-hang/**").hasAnyRole("ADMIN", "NHAN_VIEN")
                 .anyRequest().authenticated()
             );
 

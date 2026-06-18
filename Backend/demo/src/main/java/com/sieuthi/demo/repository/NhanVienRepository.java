@@ -47,7 +47,7 @@ public class NhanVienRepository {
                     res.setRole(rs.getString("Role"));
                     res.setUserName(rs.getString("UserName"));
                     boolean statusVal = rs.getBoolean("Status");
-                    res.setStatus(rs.wasNull() ? null : (statusVal ? "Hoạt động" : "Nghỉ việc")); // map boolean to string since model has String status
+                    res.setStatus(rs.wasNull() ? null : (statusVal ? "Hoạt động" : "Nghỉ việc")); 
                     res.setPassword(rs.getString("Password")); 
                     return res;
                 }
@@ -73,5 +73,34 @@ public class NhanVienRepository {
             }
             ps.executeUpdate();
         }
+    }
+
+    public void delete(String maNV) throws SQLException {
+        String sql = "DELETE FROM NhanVien WHERE MaNV = ?";
+        try (Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, maNV);
+            ps.executeUpdate();
+        }
+    }
+
+    public String generateNewMaNV() throws SQLException {
+        String sql = "SELECT MAX(MaNV) as maxMaNV FROM NhanVien";
+        try (Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                String maxMaNV = rs.getString("maxMaNV");
+                if (maxMaNV != null && maxMaNV.startsWith("NV")) {
+                    try {
+                        int currentNum = Integer.parseInt(maxMaNV.substring(2));
+                        return String.format("NV%03d", currentNum + 1);
+                    } catch (NumberFormatException e) {
+                        // ignore and default
+                    }
+                }
+            }
+        }
+        return "NV001";
     }
 }

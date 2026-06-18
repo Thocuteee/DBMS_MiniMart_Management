@@ -56,4 +56,14 @@ public class KhachHangController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @DeleteMapping("/{maKH}")
+    public ResponseEntity<String> xoaKhachHang(@PathVariable String maKH) {
+        try {
+            khachHangService.xoaKhachHang(maKH);
+            return ResponseEntity.ok("Xóa khách hàng thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
