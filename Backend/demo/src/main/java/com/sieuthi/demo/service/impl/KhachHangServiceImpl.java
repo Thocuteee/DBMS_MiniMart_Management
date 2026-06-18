@@ -2,10 +2,13 @@ package com.sieuthi.demo.service.impl;
 
 import com.sieuthi.demo.dto.request.KhachHangRequest;
 import com.sieuthi.demo.dto.response.KhachHangResponse;
+import com.sieuthi.demo.mapper.KhachHangMapper;
 import com.sieuthi.demo.repository.KhachHangRepository;
 import com.sieuthi.demo.service.KhachHangService;
 import org.springframework.stereotype.Service;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class KhachHangServiceImpl implements KhachHangService {
@@ -30,6 +33,15 @@ public class KhachHangServiceImpl implements KhachHangService {
             khachHangRepository.save(request);
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi đăng ký khách hàng: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<KhachHangResponse> layTatCaKhachHang() {
+        try {
+            return khachHangRepository.findAll();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi truy vấn khách hàng: " + e.getMessage());
         }
     }
 }
