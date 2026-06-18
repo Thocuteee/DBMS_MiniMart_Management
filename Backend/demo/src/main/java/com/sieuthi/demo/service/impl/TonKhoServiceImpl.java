@@ -23,4 +23,13 @@ public class TonKhoServiceImpl implements TonKhoService {
             throw new RuntimeException("Lỗi truy vấn tồn kho kệ: " + e.getMessage());
         }
     }
+
+    @Override
+    public List<TonKhoResponse> layTatCaTonKho() {
+        try {
+            return tonKhoRepository.findAll();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi truy vấn toàn bộ tồn kho: " + e.getMessage());
+        }
+    }
 }

@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/ban-hang")
+@RequestMapping("/api/v1/ban-hang")
 @CrossOrigin("*")
 public class BanHangController {
 
