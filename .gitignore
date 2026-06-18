@@ -20,6 +20,8 @@
 hprof-headdump.hprof
 
 **/node_modules/
+node_modules/
+node_modules
 **/jspm_packages/
 
 # Thư mục build đầu ra của FE

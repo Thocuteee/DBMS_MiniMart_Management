@@ -1,0 +1,54 @@
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-title {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.stat-change {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+  gap: 2px;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.stat-prefix, .stat-suffix {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.stat-link {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.stat-link:hover {
+  color: var(--primary);
+}
+
+.stat-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
