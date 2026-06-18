@@ -1,22 +1,29 @@
 ﻿/*
 ================================================================================
-  PHÂN HỆ QUẢN LÝ NHẬP KHO - DUYỆT HÀNG TỪ NHÀ CUNG CẤP
-  Người thực hiện : Duy
-  Cơ sở dữ liệu   : QuanLySieuThiMini
-  Mô tả           : Quản lý đầu vào siêu thị – Duyệt hóa đơn nhập hàng,
-                    chặn hàng hết HSD, tự động cập nhật TonKho.
+  PHAN HE QUAN LY NHAP KHO - DUYET HANG TU NHA CUNG CAP
+  Nguoi thuc hien : Duy
+  Co so du lieu   : QuanLySieuThiMini
+  Mo ta           : Quan ly dau vao sieu thi - Duyet hoa don nhap hang,
+                    chan hang het HSD, tu dong cap nhat TonKho.
 ================================================================================
-  Danh sách đối tượng:
-    [1] FUNCTION   : fn_KiemTraHanSuDung   – Kiểm tra & tính số ngày còn lại HSD
-    [2] VIEW       : v_BaoCaoNhapKho        – Báo cáo lô hàng nhập & đối soát NCC
-    [3] PROCEDURE  : sp_GiaoTacNhapKho     – Giao tác nhập kho (ACID-compliant)
-    [4] TRIGGER    : trg_CapNhatTonKho      – Tự động cộng dồn vào TonKho
+  Danh sach doi tuong:
+    [1] FUNCTION   : fn_KiemTraHanSuDung   - Kiem tra & tinh so ngay con lai HSD
+    [2] VIEW       : v_BaoCaoNhapKho        - Bao cao lo hang nhap & doi soat NCC
+    [3] PROCEDURE  : sp_GiaoTacNhapKho     - Giao tac nhap kho (ACID-compliant)
+    [4] TRIGGER    : DA XOA BO - Ly do: gan cung MaKho = 'K01' trong Trigger
+                     khien he thong mat linh hoat. Chuyen logic MERGE truc tiep
+                     vao ben trong Stored Procedure voi tham so @MaKho tu Java.
 
-  Tính chất ACID:
-    A – Atomicity    : BEGIN TRANSACTION + TRY/CATCH + ROLLBACK
-    C – Consistency  : CHECK CONSTRAINT, RAISERROR, fn kiểm tra HSD
-    I – Isolation    : SERIALIZABLE (SET TRANSACTION ISOLATION LEVEL)
-    D – Durability   : COMMIT; dữ liệu ghi vào đĩa vĩnh viễn sau COMMIT
+  Tinh chat ACID:
+    A - Atomicity    : BEGIN TRANSACTION + TRY/CATCH + ROLLBACK
+    C - Consistency  : CHECK CONSTRAINT, RAISERROR, fn kiem tra HSD
+    I - Isolation    : SERIALIZABLE (SET TRANSACTION ISOLATION LEVEL)
+    D - Durability   : COMMIT; du lieu ghi vao dia vinh vien sau COMMIT
+================================================================================
+  LICH SU CHINH SUA:
+    2026-06-18 : XOA trigger trg_CapNhatTonKho (gan cung K01 - loi chi mang)
+                 Them tham so @MaKho vao sp_GiaoTacNhapKho
+                 Chuyen logic MERGE TonKho vao trong giao tac cua SP
 ================================================================================
 */
 
@@ -24,8 +31,9 @@ USE [QuanLySieuThiMini];
 GO
 
 -- ============================================================
--- XÓA ĐỐI TƯỢNG CŨ (nếu tồn tại) để chạy lại script an toàn
+-- XOA DOI TUONG CU (neu ton tai) de chay lai script an toan
 -- ============================================================
+-- !! XOA TRIGGER CU - KHONG CON SU DUNG !!
 IF OBJECT_ID('dbo.trg_CapNhatTonKho',     'TR') IS NOT NULL DROP TRIGGER  dbo.trg_CapNhatTonKho;
 IF OBJECT_ID('dbo.sp_GiaoTacNhapKho',     'P')  IS NOT NULL DROP PROCEDURE dbo.sp_GiaoTacNhapKho;
 IF OBJECT_ID('dbo.v_BaoCaoNhapKho',       'V')  IS NOT NULL DROP VIEW      dbo.v_BaoCaoNhapKho;
@@ -36,11 +44,11 @@ GO
 -- ============================================================
 --  [1] FUNCTION: fn_KiemTraHanSuDung
 -- ============================================================
--- Mục đích : Tính số ngày còn lại từ hôm nay đến HSD.
---            Trả về số ngày còn lại (< 0 = đã hết hạn).
--- Tính chất ACID liên quan: Consistency – hàm này được gọi
---   bên trong sp_GiaoTacNhapKho để bảo đảm tính nhất quán
---   nghiệp vụ: không cho nhập hàng đã hoặc sắp hết hạn.
+-- Muc dich : Tinh so ngay con lai tu hom nay den HSD.
+--            Tra ve so ngay con lai (< 0 = da het han).
+-- Tinh chat ACID lien quan: Consistency - ham nay duoc goi
+--   ben trong sp_GiaoTacNhapKho de bao dam tinh nhat quan
+--   nghiep vu: khong cho nhap hang da hoac sap het han.
 -- ============================================================
 CREATE FUNCTION dbo.fn_KiemTraHanSuDung
 (
@@ -58,8 +66,8 @@ GO
 -- ============================================================
 --  [2] VIEW: v_BaoCaoNhapKho
 -- ============================================================
--- Mục đích : Hiển thị toàn bộ lô hàng đã nhập kèm HSD và tên
---            NCC để kế toán/thủ kho đối soát công nợ.
+-- Muc dich : Hien thi toan bo lo hang da nhap kem HSD va ten
+--            NCC de ke toan/thu kho doi soat cong no.
 -- ============================================================
 CREATE VIEW dbo.v_BaoCaoNhapKho
 AS
@@ -97,19 +105,22 @@ GO
 -- ============================================================
 --  [3] STORED PROCEDURE: sp_GiaoTacNhapKho
 -- ============================================================
--- Tính chất ACID:
+-- !! DA SUA LOI CHI MANG !!
+-- Phien ban cu: Trigger trg_CapNhatTonKho gan cung K01 -> mat linh hoat.
+-- Phien ban moi: Them tham so @MaKho, logic MERGE nam trong SP,
+--                Java/Backend chi dinh kho nao (K01 hoac K02) tuy y.
+--
+-- Tinh chat ACID:
 -- [A] ATOMICITY  : BEGIN TRAN + TRY/CATCH + ROLLBACK
---                  (tất cả bước thành công hoặc không bước nào)
--- [C] CONSISTENCY: fn_KiemTraHanSuDung + RAISERROR chặn HSD
---                  + kiểm tra SL > 0 và đơn giá > 0
+-- [C] CONSISTENCY: fn_KiemTraHanSuDung + RAISERROR chan HSD
 -- [I] ISOLATION  : SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
---                  ngăn phantom read khi 2 session cùng MaPN
--- [D] DURABILITY : COMMIT đảm bảo WAL đã flush trước khi trả về
+-- [D] DURABILITY : COMMIT dam bao WAL da flush truoc khi tra ve
 -- ============================================================
 CREATE PROCEDURE dbo.sp_GiaoTacNhapKho
     @MaPN        VARCHAR(15),
     @MaNCC       VARCHAR(10),
     @MaNV        VARCHAR(10),
+    @MaKho       VARCHAR(10),       -- !! MOI: Nhan MaKho linh hoat tu Java !!
     @MaSP        VARCHAR(10),
     @SoLuongNhap INT,
     @DonGiaNhap  MONEY,
@@ -118,15 +129,15 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- [I] ISOLATION: ngăn phantom read / duplicate key race condition
+    -- [I] ISOLATION: ngan phantom read / duplicate key race condition
     SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
-    -- [A] ATOMICITY: mở giao tác
+    -- [A] ATOMICITY: mo giao tac
     BEGIN TRANSACTION;
 
     BEGIN TRY
 
-        -- Bước 0: Kiểm tra tham số đầu vào
+        -- Buoc 0: Kiem tra tham so dau vao
         IF @SoLuongNhap <= 0
         BEGIN
             RAISERROR(N'[LOI NGHIEP VU] So luong nhap phai lon hon 0.', 16, 1);
@@ -136,6 +147,13 @@ BEGIN
         IF @DonGiaNhap <= 0
         BEGIN
             RAISERROR(N'[LOI NGHIEP VU] Don gia nhap phai lon hon 0.', 16, 1);
+            RETURN;
+        END;
+
+        -- Kiem tra MaKho co ton tai khong
+        IF NOT EXISTS (SELECT 1 FROM dbo.Kho WHERE MaKho = @MaKho)
+        BEGIN
+            RAISERROR(N'[LOI NGHIEP VU] Ma kho "%s" khong ton tai trong he thong!', 16, 1, @MaKho);
             RETURN;
         END;
 
@@ -154,19 +172,39 @@ BEGIN
             RETURN;
         END;
 
-        -- Bước 1: Tạo PhieuNhap header (nếu chưa có – hỗ trợ nhiều SP/phiếu)
+        -- Buoc 1: Tao PhieuNhap header (neu chua co - ho tro nhieu SP/phieu)
         IF NOT EXISTS (SELECT 1 FROM dbo.PhieuNhap WHERE MaPN = @MaPN)
         BEGIN
             INSERT INTO dbo.PhieuNhap (MaPN, NgayNhap, MaNCC, MaNV, TongTienNhap)
             VALUES (@MaPN, GETDATE(), @MaNCC, @MaNV, 0);
         END;
 
-        -- Bước 2: INSERT chi tiết phiếu nhập
-        --         Trigger trg_CapNhatTonKho sẽ tự chạy ngay sau đây
+        -- Buoc 2: INSERT chi tiet phieu nhap
         INSERT INTO dbo.ChiTietPhieuNhap (MaPN, MaSP, SoLuongNhap, DonGiaNhap, HanSuDung)
         VALUES (@MaPN, @MaSP, @SoLuongNhap, @DonGiaNhap, @HanSuDung);
 
-        -- Bước 3: Cập nhật TongTienNhap trên PhieuNhap
+        -- ============================================================
+        -- Buoc 3: CAP NHAT TON KHO (THAY THE TRIGGER CU)
+        -- ============================================================
+        -- Logic MERGE duoc chuyen tu trigger trg_CapNhatTonKho vao day
+        -- de nhan tham so @MaKho linh hoat thay vi gan cung 'K01'.
+        -- MERGE xu ly 2 truong hop:
+        --   MATCHED     -> SP da co trong kho -> cong don so luong
+        --   NOT MATCHED -> SP chua co trong kho -> tao ban ghi moi
+        -- ============================================================
+        MERGE dbo.TonKho AS tk
+        USING (
+            SELECT @MaKho AS MaKho, @MaSP AS MaSP, @SoLuongNhap AS SoLuongNhap
+        ) AS src ON (tk.MaKho = src.MaKho AND tk.MaSP = src.MaSP)
+
+        WHEN MATCHED THEN
+            UPDATE SET tk.SoLuongTonKho = tk.SoLuongTonKho + src.SoLuongNhap
+
+        WHEN NOT MATCHED BY TARGET THEN
+            INSERT (MaKho, MaSP, SoLuongTonKho)
+            VALUES (src.MaKho, src.MaSP, src.SoLuongNhap);
+
+        -- Buoc 4: Cap nhat TongTienNhap tren PhieuNhap
         UPDATE dbo.PhieuNhap
         SET    TongTienNhap = (
                     SELECT ISNULL(SUM(SoLuongNhap * DonGiaNhap), 0)
@@ -175,19 +213,20 @@ BEGIN
                )
         WHERE  MaPN = @MaPN;
 
-        -- [D] DURABILITY: commit – SQL Server đảm bảo WAL đã flush
+        -- [D] DURABILITY: commit - SQL Server dam bao WAL da flush
         COMMIT TRANSACTION;
 
         PRINT N'NHAP KHO THANH CONG!'
-            + N' | Phieu: ' + @MaPN
-            + N' | SP: '    + @MaSP
-            + N' | SL: '    + CAST(@SoLuongNhap AS VARCHAR)
+            + N' | Phieu: '  + @MaPN
+            + N' | Kho: '    + @MaKho
+            + N' | SP: '     + @MaSP
+            + N' | SL: '     + CAST(@SoLuongNhap AS VARCHAR)
             + N' | HSD con: '+ CAST(@NgayConLai AS VARCHAR) + N' ngay';
 
     END TRY
     BEGIN CATCH
 
-        -- [A] ATOMICITY: rollback toàn bộ khi có lỗi bất kỳ
+        -- [A] ATOMICITY: rollback toan bo khi co loi bat ky
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
 
@@ -204,118 +243,95 @@ BEGIN
 END;
 GO
 
-
 -- ============================================================
---  [4] TRIGGER: trg_CapNhatTonKho
+--  [4] TRIGGER: trg_CapNhatTonKho  -->  DA XOA BO
 -- ============================================================
--- Cài trên : ChiTietPhieuNhap – AFTER INSERT
--- Mục đích : Tự động cộng dồn SoLuongTonKho vào kho tổng K01.
---            Nếu SP chưa có trong TonKho → INSERT bản ghi mới.
--- Tính ACID:
--- [A] Chạy trong cùng giao tác của INSERT → rollback cùng SP
--- [C] Đảm bảo TonKho luôn đúng với thực tế nhập
+-- !! KHONG TAO TRIGGER NUA !!
+-- LY DO XOA:
+--   Phien ban cu gan cung DECLARE @MaKhoTong = 'K01' trong Trigger.
+--   Dieu nay khien moi lo hang nhap deu bi ep vao kho K01 bat ke
+--   Java/Backend truyen kho nao. Neu sieu thi muon nap hang thang
+--   len quay POS (K02) de ban lien thi Trigger se "mu thong tin"
+--   va chuyen nguoc hang ve K01 -> sai du lieu nghiem trong.
+--
+-- GIAI PHAP:
+--   Logic MERGE da duoc chuyen vao ben trong sp_GiaoTacNhapKho
+--   (Buoc 3) voi tham so @MaKho linh hoat. Java chi can truyen
+--   @MaKho = 'K01' (kho tong) hoac @MaKho = 'K02' (quay POS)
+--   tuy theo nghiep vu thuc te.
 -- ============================================================
-CREATE TRIGGER dbo.trg_CapNhatTonKho
-ON  dbo.ChiTietPhieuNhap
-AFTER INSERT
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    DECLARE @MaKhoTong VARCHAR(10) = 'K01';
-
-    BEGIN TRY
-
-        -- MERGE: cộng dồn nếu đã có, INSERT mới nếu chưa có
-        MERGE dbo.TonKho AS tk
-        USING (
-            SELECT MaSP, SUM(SoLuongNhap) AS TongNhap
-            FROM   INSERTED
-            GROUP BY MaSP
-        ) AS src ON (tk.MaKho = @MaKhoTong AND tk.MaSP = src.MaSP)
-
-        WHEN MATCHED THEN
-            UPDATE SET tk.SoLuongTonKho = tk.SoLuongTonKho + src.TongNhap
-
-        WHEN NOT MATCHED BY TARGET THEN
-            INSERT (MaKho, MaSP, SoLuongTonKho)
-            VALUES (@MaKhoTong, src.MaSP, src.TongNhap);
-
-        PRINT N'[TRIGGER] trg_CapNhatTonKho: Da cap nhat TonKho (Kho: ' + @MaKhoTong + N')';
-
-    END TRY
-    BEGIN CATCH
-        DECLARE @TrigErr NVARCHAR(4000) = ERROR_MESSAGE();
-        RAISERROR(N'[TRIGGER LOI - trg_CapNhatTonKho] %s', 16, 1, @TrigErr);
-    END CATCH;
-END;
-GO
 
 
 -- ============================================================
---  DEMO: 4 KỊCH BẢN KIỂM TRA ACID
+--  DEMO: 4 KICH BAN KIEM TRA ACID
 -- ============================================================
 
 PRINT N'';
-PRINT N'=== DEMO PHAN HE NHAP KHO ===';
+PRINT N'=== DEMO PHAN HE NHAP KHO (DA SUA LOI - KHONG CON TRIGGER) ===';
 
--- KB-1: Nhập hợp lệ (A + D + C)
+-- KB-1: Nhap hop le vao Kho Tong K01
 PRINT N'';
-PRINT N'[KB-1] Nhap hop le: SP001 – 200 hop – HSD 2027-06-01';
+PRINT N'[KB-1] Nhap hop le: SP001 - 200 hop - HSD 2027-06-01 -> KHO K01';
 PRINT N'TonKho K01/SP001 TRUOC:';
 SELECT MaKho, MaSP, SoLuongTonKho FROM dbo.TonKho WHERE MaKho='K01' AND MaSP='SP001';
 
 EXEC dbo.sp_GiaoTacNhapKho
     @MaPN='PN260612001', @MaNCC='NCC01', @MaNV='NV003',
+    @MaKho='K01',        -- Nhap vao kho tong
     @MaSP='SP001', @SoLuongNhap=200, @DonGiaNhap=27000, @HanSuDung='2027-06-01';
 
 PRINT N'TonKho K01/SP001 SAU:';
 SELECT MaKho, MaSP, SoLuongTonKho FROM dbo.TonKho WHERE MaKho='K01' AND MaSP='SP001';
 
 
--- KB-2: Nhiều SP trên 1 phiếu
+-- KB-2: Nhap thang len Quay POS K02 (tinh nang moi - truoc day bi ep K01)
 PRINT N'';
-PRINT N'[KB-2] Nhieu SP tren cung phieu PN260612002';
+PRINT N'[KB-2] Nhap THANG len quay POS K02 (tinh nang moi nho xoa Trigger)';
 EXEC dbo.sp_GiaoTacNhapKho
     @MaPN='PN260612002', @MaNCC='NCC02', @MaNV='NV003',
+    @MaKho='K02',        -- !! Nhap thang len quay POS - khong qua K01 !!
     @MaSP='SP002', @SoLuongNhap=150, @DonGiaNhap=9000, @HanSuDung='2027-09-01';
 EXEC dbo.sp_GiaoTacNhapKho
     @MaPN='PN260612002', @MaNCC='NCC02', @MaNV='NV003',
+    @MaKho='K02',
     @MaSP='SP003', @SoLuongNhap=120, @DonGiaNhap=8000, @HanSuDung='2027-08-15';
-SELECT MaKho, MaSP, SoLuongTonKho FROM dbo.TonKho WHERE MaKho='K01' AND MaSP IN ('SP002','SP003');
+PRINT N'TonKho K02 sau KB-2 (hang da len thang quay):';
+SELECT MaKho, MaSP, SoLuongTonKho FROM dbo.TonKho WHERE MaKho='K02' AND MaSP IN ('SP002','SP003');
 
 
--- KB-3: [C - CONSISTENCY] Từ chối hàng hết HSD
+-- KB-3: [C - CONSISTENCY] Tu choi hang het HSD
 PRINT N'';
 PRINT N'[KB-3] [C] Tu choi hang HET HAN (HSD = 2020-01-01)';
 BEGIN TRY
     EXEC dbo.sp_GiaoTacNhapKho
         @MaPN='PN260612099', @MaNCC='NCC01', @MaNV='NV003',
+        @MaKho='K01',
         @MaSP='SP001', @SoLuongNhap=50, @DonGiaNhap=27000, @HanSuDung='2020-01-01';
 END TRY
 BEGIN CATCH
-    PRINT N'>>> DUNG: He thong da tu choi – ' + ERROR_MESSAGE();
+    PRINT N'>>> DUNG: He thong da tu choi - ' + ERROR_MESSAGE();
 END CATCH;
-PRINT N'Kiem tra PN260612099 (phai rong – khong duoc INSERT):';
+PRINT N'Kiem tra PN260612099 (phai rong - khong duoc INSERT):';
 SELECT MaPN FROM dbo.PhieuNhap WHERE MaPN='PN260612099';
 
 
--- KB-4: [A - ATOMICITY] SP không tồn tại → ROLLBACK
+-- KB-4: [A - ATOMICITY] SP khong ton tai -> ROLLBACK
 PRINT N'';
-PRINT N'[KB-4] [A] SP khong ton tai SPXXX – toan bo ROLLBACK';
+PRINT N'[KB-4] [A] SP khong ton tai SPXXX - toan bo ROLLBACK';
 BEGIN TRY
     EXEC dbo.sp_GiaoTacNhapKho
         @MaPN='PN260612088', @MaNCC='NCC01', @MaNV='NV003',
+        @MaKho='K01',
         @MaSP='SPXXX', @SoLuongNhap=10, @DonGiaNhap=50000, @HanSuDung='2027-12-01';
 END TRY
 BEGIN CATCH
-    PRINT N'>>> DUNG: Giao tac rollback – ' + ERROR_MESSAGE();
+    PRINT N'>>> DUNG: Giao tac rollback - ' + ERROR_MESSAGE();
 END CATCH;
-PRINT N'Kiem tra PN260612088 (phai rong – da rollback):';
+PRINT N'Kiem tra PN260612088 (phai rong - da rollback):';
 SELECT MaPN FROM dbo.PhieuNhap WHERE MaPN='PN260612088';
 
 
--- Báo cáo tổng hợp
+-- Bao cao tong hop
 PRINT N'';
 PRINT N'=== BAO CAO NHAP KHO (v_BaoCaoNhapKho) ===';
 SELECT * FROM dbo.v_BaoCaoNhapKho ORDER BY [Ngay Nhap] DESC, [Ma Phieu Nhap];
@@ -323,74 +339,70 @@ GO
 
 /*
 ============================================================
-  THUYẾT MINH 4 TÍNH CHẤT ACID
+  THUYET MINH 4 TINH CHAT ACID
 ============================================================
 
-  A – ATOMICITY (Tính nguyên tử)
+  A - ATOMICITY (Tinh nguyen tu)
   --------------------------------
   VAN DE:
-    Nếu INSERT PhieuNhap thành công nhưng INSERT ChiTietPhieuNhap
-    thất bại (VD: FK vi phạm, timeout), TonKho sẽ không được cập
-    nhật → dữ liệu bị mất đồng bộ.
+    Neu INSERT PhieuNhap thanh cong nhung INSERT ChiTietPhieuNhap
+    that bai (VD: FK vi pham, timeout), TonKho se khong duoc cap
+    nhat -> du lieu bi mat dong bo.
 
   KHAC PHUC TRONG CODE:
-    BEGIN TRANSACTION → thực hiện INSERT PhieuNhap (Bước 1)
-    → INSERT ChiTietPhieuNhap (Bước 2, trigger chạy tại đây)
-    → UPDATE TongTienNhap (Bước 3) → COMMIT.
-    Nếu bất kỳ bước nào ném exception → CATCH → ROLLBACK.
-    => Hoặc cả 3 bước đều được lưu, hoặc không gì được lưu.
+    BEGIN TRANSACTION -> thuc hien INSERT PhieuNhap (Buoc 1)
+    -> INSERT ChiTietPhieuNhap (Buoc 2)
+    -> MERGE TonKho (Buoc 3 - THAY THE TRIGGER CU)
+    -> UPDATE TongTienNhap (Buoc 4) -> COMMIT.
+    Neu bat ky buoc nao nem exception -> CATCH -> ROLLBACK.
+    => Hoac ca 4 buoc deu duoc luu, hoac khong gi duoc luu.
 
   ============================================================
 
-  C – CONSISTENCY (Tính nhất quán)
+  C - CONSISTENCY (Tinh nhat quan)
   ----------------------------------
   VAN DE:
-    Siêu thị có thể vô tình nhập hàng hết HSD, hoặc nhập số
-    lượng âm, đơn giá = 0 → vi phạm quy tắc kinh doanh.
+    Sieu thi co the vo tinh nhap hang het HSD, hoac nhap so
+    luong am, don gia = 0 -> vi pham quy tac kinh doanh.
 
   KHAC PHUC TRONG CODE:
-    • fn_KiemTraHanSuDung(@HanSuDung, GETDATE()): nếu trả về ≤ 0
-      → RAISERROR ngay lập tức, không INSERT gì cả.
-    • IF @SoLuongNhap <= 0 / @DonGiaNhap <= 0 → RAISERROR.
-    • FK CONSTRAINT: MaSP, MaNCC, MaNV phải tồn tại trong bảng cha.
-    • Trigger cộng dồn TonKho → kho luôn phản ánh đúng thực tế.
+    - fn_KiemTraHanSuDung(@HanSuDung, GETDATE()): neu tra ve <= 0
+      -> RAISERROR ngay lap tuc, khong INSERT gi ca.
+    - IF @SoLuongNhap <= 0 / @DonGiaNhap <= 0 -> RAISERROR.
+    - Kiem tra MaKho ton tai truoc khi MERGE.
+    - FK CONSTRAINT: MaSP, MaNCC, MaNV phai ton tai trong bang cha.
 
   ============================================================
 
-  I – ISOLATION (Tính cô lập)
+  I - ISOLATION (Tinh co lap)
   -----------------------------
   VAN DE:
-    2 nhân viên cùng lúc tạo phiếu cùng MaPN → race condition
-    → cả 2 kiểm tra IF NOT EXISTS đều thấy "chưa có" → cả 2
-    cùng INSERT → vi phạm PRIMARY KEY.
-    Với READ COMMITTED (mặc định), T2 có thể đọc dữ liệu chưa
-    commit của T1 → dirty read / phantom read.
+    2 nhan vien cung luc tao phieu cung MaPN -> race condition
+    -> ca 2 kiem tra IF NOT EXISTS deu thay "chua co" -> ca 2
+    cung INSERT -> vi pham PRIMARY KEY.
 
   KHAC PHUC TRONG CODE:
     SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
-    → SQL Server đặt range lock trên MaPN trước khi đọc.
-    → T2 bị block cho đến khi T1 COMMIT hoặc ROLLBACK xong.
-    → Loại bỏ hoàn toàn phantom read và duplicate key race.
+    -> SQL Server dat range lock tren MaPN truoc khi doc.
+    -> T2 bi block cho den khi T1 COMMIT hoac ROLLBACK xong.
+    -> Loai bo hoan toan phantom read va duplicate key race.
 
   ============================================================
 
-  D – DURABILITY (Tính bền vững)
+  D - DURABILITY (Tinh ben vung)
   --------------------------------
   VAN DE:
-    Mất điện, crash server ngay sau COMMIT → dữ liệu chưa kịp
-    ghi xuống đĩa có thể bị mất.
+    Mat dien, crash server ngay sau COMMIT -> du lieu chua kip
+    ghi xuong dia co the bi mat.
 
   KHAC PHUC TRONG CODE & HE THONG:
-    • SQL Server dùng Write-Ahead Log (WAL): mọi thay đổi được
-      ghi vào file log (.ldf) TRƯỚC khi ghi ra data file (.mdf).
-    • Sau COMMIT TRANSACTION, engine đảm bảo log đã được flush
-      xuống đĩa (force log at commit protocol).
-    • Khi server restart sau sự cố:
-        REDO  → phục hồi các giao tác đã COMMIT chưa kịp ghi .mdf
-        UNDO  → hủy các giao tác chưa COMMIT
-    • Lệnh COMMIT TRANSACTION trong SP là điểm đảm bảo Durability.
-    • Bổ sung tùy chọn: bật SQL Server Always On / Database Mirror
-      để Durability cấp độ cao hơn.
+    - SQL Server dung Write-Ahead Log (WAL): moi thay doi duoc
+      ghi vao file log (.ldf) TRUOC khi ghi ra data file (.mdf).
+    - Sau COMMIT TRANSACTION, engine dam bao log da duoc flush
+      xuong dia (force log at commit protocol).
+    - Khi server restart sau su co:
+        REDO  -> phuc hoi cac giao tac da COMMIT chua kip ghi .mdf
+        UNDO  -> huy cac giao tac chua COMMIT
 
 ============================================================
 */

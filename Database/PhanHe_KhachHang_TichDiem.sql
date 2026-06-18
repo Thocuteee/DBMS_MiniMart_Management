@@ -1,4 +1,4 @@
--- =============================================================================
+﻿-- =============================================================================
 --   PHÂN HỆ: KHÁCH HÀNG & TÍCH ĐIỂM THƯỞNG
 --   (Đổi điểm thành tiền giảm giá trực tiếp trên hóa đơn)
 -- =============================================================================
@@ -362,9 +362,19 @@ GO
 -- Quy tắc   : Cứ mỗi 100.000đ ThanhTien = 1 điểm (FLOOR - làm tròn xuống)
 -- Ví dụ     : ThanhTien = 350.000đ → FLOOR(350.000/100.000) = 3 điểm
 -- =============================================================================
+-- ============================================================================
+-- !! DA SUA LOI CHI MANG !!
+-- Phien ban cu: AFTER INSERT, UPDATE -> Khi INSERT HoaDon moi (ThanhTien = 0),
+--   Trigger tinh diem ngay lap tuc -> Khach mua bao nhieu tien cung tich 0 diem.
+--   Vi tai thoi diem INSERT, Trigger cua POS chua kip cap nhat ThanhTien
+--   (vi chua co ChiTietHoaDon nao) -> "tich diem ma".
+-- Phien ban moi: AFTER UPDATE ONLY -> Chi tich diem khi ThanhTien duoc UPDATE
+--   chot so xong xuoi boi trigger POS cua Tho.
+-- LICH SU: 2026-06-18 - Sua AFTER INSERT,UPDATE -> AFTER UPDATE
+-- ============================================================================
 CREATE TRIGGER dbo.trg_TuDongCongDiem
 ON  dbo.HoaDon
-AFTER INSERT, UPDATE
+AFTER UPDATE
 AS
 BEGIN
     SET NOCOUNT ON;

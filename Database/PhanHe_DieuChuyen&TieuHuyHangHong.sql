@@ -1,4 +1,4 @@
-\-- =================================================================================
+﻿\-- =================================================================================
 -- HỆ THỐNG QUẢN LÝ SIÊU THỊ MINI - PHÂN HỆ ĐIỀU CHUYỂN & TIÊU HỦY HÀNG HỎNG
 -- =================================================================================
 
@@ -108,63 +108,146 @@ END;
 GO
 
 -- 📌 [PROCEDURE 1]: Điều chuyển hàng nội bộ từ Kho tổng (K01) sang Kho quầy (K02)
+-- ============================================================================
+-- !! DA SUA LOI CHI MANG !!
+-- Phien ban cu: Hardcode K01->K02, dung REPEATABLE READ, khong co chien luoc
+--   sap xep thu tu lock -> 2 luong dieu chuyen cheo (K01->K02 va K02->K01)
+--   dong thoi se gay DEADLOCK vong tron treo sap Backend Java.
+-- Phien ban moi:
+--   1. Them tham so @MaKhoNguon, @MaKhoDich linh hoat
+--   2. Nang ISOLATION LEVEL len SERIALIZABLE
+--   3. Them logic IF/ELSE: luon UPDATE ma kho NHO hon TRUOC -> pha the
+--      deadlock vong tron (ordered resource acquisition)
+-- LICH SU: 2026-06-18 - Sua deadlock + linh hoat hoa kho nguon/dich
+-- ============================================================================
 CREATE PROCEDURE sp_DieuChuyenKhoNoiBo
     @MaSanPham VARCHAR(50),
-    @SoLuongChuyen INT
+    @SoLuongChuyen INT,
+    @MaKhoNguon VARCHAR(10) = 'K01',    -- Mac dinh: Kho tong
+    @MaKhoDich  VARCHAR(10) = 'K02'     -- Mac dinh: Quay POS
 AS
 BEGIN
     SET NOCOUNT ON;
     
     IF @SoLuongChuyen <= 0
     BEGIN
-        RAISERROR(N'Số lượng điều chuyển phải lớn hơn 0.', 16, 1);
+        RAISERROR(N'So luong dieu chuyen phai lon hon 0.', 16, 1);
         RETURN;
     END
 
-    -- Sử dụng mức cô lập cao để tránh hiện tượng đọc dữ liệu rác (Race Condition)
-    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    IF @MaKhoNguon = @MaKhoDich
+    BEGIN
+        RAISERROR(N'Kho nguon va kho dich khong duoc trung nhau!', 16, 1);
+        RETURN;
+    END
+
+    -- [I] ISOLATION: SERIALIZABLE ngan phantom read va race condition
+    -- (Nang cap tu REPEATABLE READ de bao dam an toan tuyet doi)
+    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
     BEGIN TRANSACTION;
     BEGIN TRY
-        -- 1. Kiểm tra và khóa dữ liệu tồn kho tại K01 nhằm đảm bảo tính Isolation
-        DECLARE @TonK01 INT;
-        SELECT @TonK01 = SoLuong 
-        FROM TonKho WITH (XLOCK, ROWLOCK)
-        WHERE MaKho = 'K01' AND MaSanPham = @MaSanPham;
 
-        IF @TonK01 IS NULL OR @TonK01 < @SoLuongChuyen
+        DECLARE @TonNguon INT;
+
+        -- ============================================================
+        -- CHIEN LUOC CHONG DEADLOCK: ORDERED RESOURCE ACQUISITION
+        -- ============================================================
+        -- Nguyen tac: Luon lock ma kho co gia tri NHO TRUOC.
+        -- Gia su co 2 luong chay dong thoi:
+        --   Luong A: Dieu chuyen K01 -> K02 (lock K01 truoc, roi K02)
+        --   Luong B: Dieu chuyen K02 -> K01 (lock K01 truoc, roi K02)
+        -- Ca 2 luong deu lock K01 truoc -> luong den sau phai cho
+        -- -> KHONG bao gio xay ra vong deadlock tron.
+        -- ============================================================
+
+        IF @MaKhoNguon < @MaKhoDich
         BEGIN
-            RAISERROR(N'Lỗi: Kho tổng K01 không đủ hàng để điều chuyển!', 16, 1);
-        END
+            -- Ma kho nguon NHO hon -> Xu ly kho NGUON truoc (tru), kho DICH sau (cong)
 
-        -- 2. Trừ bốc hàng tại kho tổng K01
-        UPDATE TonKho 
-        SET SoLuong = SoLuong - @SoLuongChuyen 
-        WHERE MaKho = 'K01' AND MaSanPham = @MaSanPham;
+            -- 1a. Kiem tra & khoa dong kho NGUON (nho hon -> lock truoc)
+            SELECT @TonNguon = SoLuong 
+            FROM TonKho WITH (XLOCK, ROWLOCK)
+            WHERE MaKho = @MaKhoNguon AND MaSanPham = @MaSanPham;
 
-        -- 3. Cộng hàng vào kho quầy K02 của Thọ
-        IF EXISTS (SELECT 1 FROM TonKho WHERE MaKho = 'K02' AND MaSanPham = @MaSanPham)
-        BEGIN
+            IF @TonNguon IS NULL OR @TonNguon < @SoLuongChuyen
+            BEGIN
+                RAISERROR(N'Loi: Kho nguon %s khong du hang de dieu chuyen!', 16, 1, @MaKhoNguon);
+            END
+
+            -- 2a. Tru kho nguon
             UPDATE TonKho 
-            SET SoLuong = SoLuong + @SoLuongChuyen 
-            WHERE MaKho = 'K02' AND MaSanPham = @MaSanPham;
+            SET SoLuong = SoLuong - @SoLuongChuyen 
+            WHERE MaKho = @MaKhoNguon AND MaSanPham = @MaSanPham;
+
+            -- 3a. Cong kho dich (lon hon -> lock sau)
+            IF EXISTS (SELECT 1 FROM TonKho WHERE MaKho = @MaKhoDich AND MaSanPham = @MaSanPham)
+            BEGIN
+                UPDATE TonKho 
+                SET SoLuong = SoLuong + @SoLuongChuyen 
+                WHERE MaKho = @MaKhoDich AND MaSanPham = @MaSanPham;
+            END
+            ELSE
+            BEGIN
+                INSERT INTO TonKho (MaKho, MaSanPham, SoLuong) 
+                VALUES (@MaKhoDich, @MaSanPham, @SoLuongChuyen);
+            END
         END
         ELSE
         BEGIN
-            INSERT INTO TonKho (MaKho, MaSanPham, SoLuong) 
-            VALUES ('K02', @MaSanPham, @SoLuongChuyen);
+            -- Ma kho DICH nho hon kho NGUON -> Lock kho DICH truoc (cong), kho NGUON sau (tru)
+            -- VD: Dieu chuyen K02 -> K01 thi lock K01 truoc (K01 < K02)
+
+            -- 1b. Lock kho DICH truoc (nho hon) - chi doc de giu lock
+            IF EXISTS (SELECT 1 FROM TonKho WITH (XLOCK, ROWLOCK) WHERE MaKho = @MaKhoDich AND MaSanPham = @MaSanPham)
+            BEGIN
+                -- Kho dich da co san pham -> se UPDATE phia duoi
+                DECLARE @dummy INT = 1;
+            END
+
+            -- 2b. Kiem tra & khoa kho NGUON (lon hon -> lock sau)
+            SELECT @TonNguon = SoLuong 
+            FROM TonKho WITH (XLOCK, ROWLOCK)
+            WHERE MaKho = @MaKhoNguon AND MaSanPham = @MaSanPham;
+
+            IF @TonNguon IS NULL OR @TonNguon < @SoLuongChuyen
+            BEGIN
+                RAISERROR(N'Loi: Kho nguon %s khong du hang de dieu chuyen!', 16, 1, @MaKhoNguon);
+            END
+
+            -- 3b. Tru kho nguon
+            UPDATE TonKho 
+            SET SoLuong = SoLuong - @SoLuongChuyen 
+            WHERE MaKho = @MaKhoNguon AND MaSanPham = @MaSanPham;
+
+            -- 4b. Cong kho dich
+            IF EXISTS (SELECT 1 FROM TonKho WHERE MaKho = @MaKhoDich AND MaSanPham = @MaSanPham)
+            BEGIN
+                UPDATE TonKho 
+                SET SoLuong = SoLuong + @SoLuongChuyen 
+                WHERE MaKho = @MaKhoDich AND MaSanPham = @MaSanPham;
+            END
+            ELSE
+            BEGIN
+                INSERT INTO TonKho (MaKho, MaSanPham, SoLuong) 
+                VALUES (@MaKhoDich, @MaSanPham, @SoLuongChuyen);
+            END
         END
 
-        -- Cam kết lưu thay đổi vật lý (Atomicity & Durability)
+        -- Cam ket luu thay doi vat ly (Atomicity & Durability)
         COMMIT TRANSACTION;
-        PRINT N'=== THÀNH CÔNG: Điều chuyển hàng từ K01 sang K02 thành công. ===';
+        PRINT N'=== THANH CONG: Dieu chuyen ' + CAST(@SoLuongChuyen AS VARCHAR)
+            + N' ' + @MaSanPham
+            + N' tu ' + @MaKhoNguon + N' sang ' + @MaKhoDich + N' ===';
     END TRY
     BEGIN CATCH
-        -- Thu hồi toàn bộ nếu phát sinh lỗi
-        ROLLBACK TRANSACTION;
+        -- Thu hoi toan bo neu phat sinh loi
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
         DECLARE @ErrorMsg NVARCHAR(4000) = ERROR_MESSAGE();
         RAISERROR(@ErrorMsg, 16, 1);
     END CATCH
+
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 END;
 GO
 
