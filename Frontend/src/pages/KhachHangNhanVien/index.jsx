@@ -4,6 +4,10 @@ import NhanVienTab from './NhanVienTab';
 import './KhachHangNhanVien.css';
 
 const KhachHangNhanVien = ({ defaultTab = 'khachhang' }) => {
+  const rolesString = localStorage.getItem('roles');
+  const roles = rolesString ? JSON.parse(rolesString) : [];
+  const isAdmin = roles.includes('ROLE_ADMIN');
+
   const [activeTab, setActiveTab] = useState(defaultTab);
 
   // Sync state if prop changes (e.g. clicking different links in Sidebar)
@@ -26,12 +30,14 @@ const KhachHangNhanVien = ({ defaultTab = 'khachhang' }) => {
           >
             Danh sách Khách Hàng
           </button>
-          <button 
-            className={`tab-btn ${activeTab === 'nhanvien' ? 'active' : ''}`}
-            onClick={() => setActiveTab('nhanvien')}
-          >
-            Danh sách Nhân Viên
-          </button>
+          {isAdmin && (
+            <button 
+              className={`tab-btn ${activeTab === 'nhanvien' ? 'active' : ''}`}
+              onClick={() => setActiveTab('nhanvien')}
+            >
+              Danh sách Nhân Viên
+            </button>
+          )}
         </div>
 
         {activeTab === 'khachhang' ? <KhachHangTab /> : <NhanVienTab />}

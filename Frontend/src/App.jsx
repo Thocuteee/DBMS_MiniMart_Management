@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login/Login';
 import KhachHangNhanVien from './pages/KhachHangNhanVien';
+import Profile from './pages/Profile/Profile';
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -40,6 +41,8 @@ function App() {
           <Route path="employees" element={<KhachHangNhanVien defaultTab="nhanvien" />} />
           <Route path="categories" element={<Placeholder title="Danh mục Sản Phẩm" />} />
           <Route path="suppliers" element={<Placeholder title="Nhà Cung Cấp" />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="my-orders" element={<Placeholder title="Đơn hàng của tôi" />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

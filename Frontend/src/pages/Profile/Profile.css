@@ -1,0 +1,49 @@
+.profile-page {
+  padding: 1.5rem;
+}
+
+.profile-avatar {
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.15);
+}
+
+.bg-primary-light {
+  background-color: rgba(var(--primary-rgb), 0.1);
+}
+
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+.profile-page .card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.profile-page .form-control:disabled {
+  background-color: var(--bg-secondary) !important;
+  opacity: 0.8;
+}
+
+.profile-page .input-group-text {
+  border-right: none;
+}
+
+.profile-page .form-control {
+  border-left: none;
+}
+
+.profile-page .form-control:focus {
+  border-color: #dee2e6;
+  box-shadow: none;
+}
+
+.profile-page .input-group:focus-within {
+  box-shadow: 0 0 0 0.25rem rgba(var(--primary-rgb), 0.25);
+  border-radius: 0.375rem;
+}
+
+.profile-page .input-group:focus-within .input-group-text,
+.profile-page .input-group:focus-within .form-control {
+  border-color: var(--primary-color);
+}

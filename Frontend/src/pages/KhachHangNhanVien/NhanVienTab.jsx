@@ -111,9 +111,28 @@ const NhanVienTab = () => {
     }
   };
 
-  const handleDelete = (maNV) => {
-    // Backend doesn't have a delete endpoint yet
-    alert('Tính năng xóa hiện chưa được hỗ trợ từ Backend!');
+  const handleDelete = async (maNV) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa nhân viên ${maNV} không?`)) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/${maNV}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(errText || 'Lỗi khi xóa nhân viên');
+      }
+      
+      alert('Xóa nhân viên thành công!');
+      fetchStaff();
+    } catch (err) {
+      alert('Lỗi: ' + err.message);
+    }
   };
 
   return (
@@ -208,10 +227,6 @@ const NhanVienTab = () => {
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="d-flex gap-3">
-                  <div className="form-group flex-1 w-100">
-                    <label className="form-label">Mã NV (Tự sinh nếu trống)</label>
-                    <input type="text" className="form-control" name="maNV" value={formData.maNV} onChange={handleChange} disabled={!!editingStaff} placeholder="Để trống nếu muốn tự sinh" />
-                  </div>
                   <div className="form-group flex-1 w-100">
                     <label className="form-label">Vai Trò</label>
                     <select className="form-select" name="role" value={formData.role} onChange={handleChange}>

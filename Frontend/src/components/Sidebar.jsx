@@ -11,11 +11,18 @@ import {
   FileBox, 
   Briefcase,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  User as UserIcon,
+  ShoppingBag
 } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = () => {
+  const rolesString = localStorage.getItem('roles');
+  const roles = rolesString ? JSON.parse(rolesString) : [];
+  const isAdmin = roles.includes('ROLE_ADMIN');
+  const isNhanVien = roles.includes('ROLE_NHAN_VIEN');
+  const isKhachHang = roles.includes('ROLE_KHACH_HANG');
   const [openMenus, setOpenMenus] = useState({
     sales: false,
     inventory: false,
@@ -46,52 +53,77 @@ const Sidebar = () => {
             </NavLink>
           </li>
 
-          {/* Sales Menu */}
-          <li className="nav-item">
-            <div className={`nav-link ${openMenus.sales ? 'open' : ''}`} onClick={() => toggleMenu('sales')}>
-              <ShoppingCart size={18} />
-              <span>Quản lý Bán hàng</span>
-              {openMenus.sales ? <ChevronDown size={16} className="ms-auto" /> : <ChevronRight size={16} className="ms-auto" />}
-            </div>
-            {openMenus.sales && (
-              <ul className="sub-menu">
-                <li><NavLink to="/orders">Đơn hàng (Hóa Đơn)</NavLink></li>
-                <li><NavLink to="/customers">Khách hàng</NavLink></li>
-              </ul>
-            )}
-          </li>
+          {/* Customer Menu */}
+          {isKhachHang && (
+            <>
+              <li className="nav-item">
+                <NavLink to="/profile" className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+                  <UserIcon size={18} />
+                  <span>Hồ sơ cá nhân</span>
+                </NavLink>
+              </li>
+              <li className="nav-item">
+                <NavLink to="/my-orders" className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>
+                  <ShoppingBag size={18} />
+                  <span>Đơn hàng của tôi</span>
+                </NavLink>
+              </li>
+            </>
+          )}
 
-          {/* Inventory Menu */}
-          <li className="nav-item">
-            <div className={`nav-link ${openMenus.inventory ? 'open' : ''}`} onClick={() => toggleMenu('inventory')}>
-              <Package size={18} />
-              <span>Kho & Sản phẩm</span>
-              {openMenus.inventory ? <ChevronDown size={16} className="ms-auto" /> : <ChevronRight size={16} className="ms-auto" />}
-            </div>
-            {openMenus.inventory && (
-              <ul className="sub-menu">
-                <li><NavLink to="/products">Sản phẩm</NavLink></li>
-                <li><NavLink to="/categories">Danh mục</NavLink></li>
-                <li><NavLink to="/imports">Nhập kho (Phiếu Nhập)</NavLink></li>
-                <li><NavLink to="/warehouse">Tồn kho</NavLink></li>
-                <li><NavLink to="/suppliers">Nhà cung cấp</NavLink></li>
-              </ul>
-            )}
-          </li>
+          {/* Admin & NhanVien Menu */}
+          {(isAdmin || isNhanVien) && (
+            <>
+              {/* Sales Menu */}
+              <li className="nav-item">
+                <div className={`nav-link ${openMenus.sales ? 'open' : ''}`} onClick={() => toggleMenu('sales')}>
+                  <ShoppingCart size={18} />
+                  <span>Quản lý Bán hàng</span>
+                  {openMenus.sales ? <ChevronDown size={16} className="ms-auto" /> : <ChevronRight size={16} className="ms-auto" />}
+                </div>
+                {openMenus.sales && (
+                  <ul className="sub-menu">
+                    <li><NavLink to="/orders">Đơn hàng (Hóa Đơn)</NavLink></li>
+                    <li><NavLink to="/customers">Khách hàng</NavLink></li>
+                  </ul>
+                )}
+              </li>
 
-          {/* HR Menu */}
-          <li className="nav-item">
-            <div className={`nav-link ${openMenus.hr ? 'open' : ''}`} onClick={() => toggleMenu('hr')}>
-              <Users size={18} />
-              <span>Quản lý Nhân sự</span>
-              {openMenus.hr ? <ChevronDown size={16} className="ms-auto" /> : <ChevronRight size={16} className="ms-auto" />}
-            </div>
-            {openMenus.hr && (
-              <ul className="sub-menu">
-                <li><NavLink to="/employees">Nhân viên</NavLink></li>
-              </ul>
-            )}
-          </li>
+              {/* Inventory Menu */}
+              <li className="nav-item">
+                <div className={`nav-link ${openMenus.inventory ? 'open' : ''}`} onClick={() => toggleMenu('inventory')}>
+                  <Package size={18} />
+                  <span>Kho & Sản phẩm</span>
+                  {openMenus.inventory ? <ChevronDown size={16} className="ms-auto" /> : <ChevronRight size={16} className="ms-auto" />}
+                </div>
+                {openMenus.inventory && (
+                  <ul className="sub-menu">
+                    <li><NavLink to="/products">Sản phẩm</NavLink></li>
+                    <li><NavLink to="/categories">Danh mục</NavLink></li>
+                    <li><NavLink to="/imports">Nhập kho (Phiếu Nhập)</NavLink></li>
+                    <li><NavLink to="/warehouse">Tồn kho</NavLink></li>
+                    <li><NavLink to="/suppliers">Nhà cung cấp</NavLink></li>
+                  </ul>
+                )}
+              </li>
+            </>
+          )}
+
+          {/* HR Menu - Only for Admin */}
+          {isAdmin && (
+            <li className="nav-item">
+              <div className={`nav-link ${openMenus.hr ? 'open' : ''}`} onClick={() => toggleMenu('hr')}>
+                <Users size={18} />
+                <span>Quản lý Nhân sự</span>
+                {openMenus.hr ? <ChevronDown size={16} className="ms-auto" /> : <ChevronRight size={16} className="ms-auto" />}
+              </div>
+              {openMenus.hr && (
+                <ul className="sub-menu">
+                  <li><NavLink to="/employees">Nhân viên</NavLink></li>
+                </ul>
+              )}
+            </li>
+          )}
 
         </ul>
       </div>
