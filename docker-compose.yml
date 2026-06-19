@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  dbms-sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: dbms_sqlserver_container
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+    env_file:
+      - ./Backend/demo/.env
+    networks:
+      - dbms-network
+
+  dbms-backend:
+    build:
+      context: ./Backend/demo
+      dockerfile: Dockerfile
+    container_name: dbms_backend_container
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./Backend/demo/.env
+    environment:
+      - DB_URL=jdbc:sqlserver://dbms-sqlserver:1433;databaseName=QuanLySieuThiMini;encrypt=true;trustServerCertificate=true;
+    depends_on:
+      - dbms-sqlserver
+    networks:
+      - dbms-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./Backend/demo/src
+        - action: rebuild
+          path: ./Backend/demo/pom.xml
+
+  dbms-frontend:
+    image: node:20-alpine
+    container_name: dbms_frontend_container
+    working_dir: /app
+    volumes:
+      - ./Frontend:/app
+    ports:
+      - "80:5173" 
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    depends_on:
+      - dbms-backend
+    networks:
+      - dbms-network
+
+networks:
+  dbms-network:
+    driver: bridge
