@@ -1,131 +1,17 @@
-﻿USE master;
-GO
--- Xóa kho cũ bị lỗi để làm lại từ đầu cho sạch
-DROP DATABASE IF EXISTS QuanLySieuThiMini;
-GO
-CREATE DATABASE QuanLySieuThiMini;
-GO
 USE QuanLySieuThiMini;
 GO
 
 -- =======================================================
--- PHẦN 1: XÂY DỰNG NỀN MÓNG CÁC BẢNG 
+-- PHÂN HỆ ĐỔI TRẢ HẬU MÃI & HOÀN TIỀN
 -- =======================================================
-CREATE TABLE KhachHang(
-    MaKH varchar(10) PRIMARY KEY,
-    UserName varchar(15),
-    Phone varchar(10),
-    DiemTichLuy int DEFAULT 0
-);
-
-CREATE TABLE NhanVien(
-    MaNV varchar(10) PRIMARY KEY,
-    HoTen nvarchar(50),
-    Phone varchar(10),
-    Role nvarchar(30),
-    UserName varchar(30),
-    Password varchar(255),
-    Status bit DEFAULT 1
-);
-
-CREATE TABLE LoaiSanPham(
-    MaLoai varchar(10) PRIMARY KEY,
-    TenLoai nvarchar(50)
-);
-
-CREATE TABLE NhaCungCap(
-    MaNCC varchar(10) PRIMARY KEY,
-    NameNCC nvarchar(100),
-    Phone varchar(10),
-    Address nvarchar(255)
-);
-
-CREATE TABLE Kho(
-    MaKho varchar(10) PRIMARY KEY,
-    TenKho nvarchar(30),
-    DiaChi nvarchar(100)
-);
-
-CREATE TABLE SanPham(
-    MaSP varchar(10) PRIMARY KEY,
-    MaVach varchar(20),
-    MaLoai varchar(10) REFERENCES LoaiSanPham(MaLoai),
-    TenSP nvarchar(100),
-    DonVi nvarchar(20),
-    GiaBan money
-);
-
-CREATE TABLE TonKho(
-    MaKho varchar(10) REFERENCES Kho(MaKho),
-    MaSP varchar(10) REFERENCES SanPham(MaSP),
-    SoLuongTonKho int DEFAULT 0,
-    PRIMARY KEY (MaKho, MaSP)
-);
-
-CREATE TABLE HoaDon(
-    MaHD varchar(15) PRIMARY KEY,
-    NgayLap datetime DEFAULT GETDATE(),
-    MaNV varchar(10) REFERENCES NhanVien(MaNV),
-    MaKH varchar(10) REFERENCES KhachHang(MaKH),
-    TongTien money DEFAULT 0,
-    GiamGia money DEFAULT 0,
-    ThanhTien money,
-    GhiChu nvarchar(255) -- Cột này dùng để đánh dấu nếu khách trả hàng
-);
-
-CREATE TABLE ChiTietHoaDon(
-    MaHD varchar(15) REFERENCES HoaDon(MaHD),
-    MaSP varchar(10) REFERENCES SanPham(MaSP),
-    SoLuong int,
-    DonGiaBan money,
-    ThanhTien money,
-    PRIMARY KEY (MaHD, MaSP)
-);
-
-CREATE TABLE PhieuNhap(
-    MaPN varchar(15) PRIMARY KEY,
-    NgayNhap datetime DEFAULT GETDATE(),
-    MaNCC varchar(10) REFERENCES NhaCungCap(MaNCC),
-    MaNV varchar(10) REFERENCES NhanVien(MaNV),
-    TongTienNhap money DEFAULT 0
-);
-
-CREATE TABLE ChiTietPhieuNhap(
-    MaPN varchar(15) REFERENCES PhieuNhap(MaPN),
-    MaSP varchar(10) REFERENCES SanPham(MaSP),
-    SoLuongNhap int,
-    DonGiaNhap money,
-    HanSuDung date,
-    PRIMARY KEY (MaPN, MaSP)
-);
-
-CREATE TABLE PhieuDoiTra (
-    MaPhieuDT varchar(15) PRIMARY KEY,
-    MaHD varchar(15) REFERENCES HoaDon(MaHD),
-    NgayDoiTra datetime DEFAULT GETDATE(),
-    TongTienHoan money,
-    LyDo nvarchar(255)
-);
-GO
+-- Các bảng (KhachHang, NhanVien, LoaiSanPham, NhaCungCap, Kho,
+-- SanPham, TonKho, HoaDon, ChiTietHoaDon, PhieuNhap, ChiTietPhieuNhap,
+-- PhieuDoiTra) và dữ liệu mẫu đã được tạo sẵn trong 01_Init_Database_Full.sql.
+-- Script này chỉ tạo Function, View, Trigger, Stored Procedure cho phân hệ Đổi trả.
+-- =======================================================
 
 -- =======================================================
--- PHẦN 2: ĐỔ DỮ LIỆU MẪU CỦA NHÓM VÀO KHO
--- =======================================================
-INSERT INTO KhachHang (MaKH, UserName, Phone, DiemTichLuy) VALUES ('KH001', 'anh_tuan', '0934567890', 120), ('KH002', 'bao_ngoc', '0945678901', 50), ('KH003', 'khach_vl', '0000000000', 0);
-INSERT INTO NhanVien (MaNV, HoTen, Phone, Role, UserName, Password, Status) VALUES ('NV001', N'Chềnh Hưng Thọ', '0901234567', 'Admin', 'admin', 'pass123', 1), ('NV002', N'Nguyễn Văn Thu', '0912345678', N'Thu ngân', 'thu_cashier', 'pass123', 1), ('NV003', N'Trần Văn Khoa', '0923456789', 'Kho', 'khoa_warehouse', 'pass123', 1);
-INSERT INTO LoaiSanPham (MaLoai, TenLoai) VALUES ('L01', N'Sữa và các sản phẩm từ Sữa'), ('L02', N'Nước giải khát'), ('L03', N'Hóa mỹ phẩm & Tẩy rửa');
-INSERT INTO NhaCungCap (MaNCC, NameNCC, Phone, Address) VALUES ('NCC01', N'Công ty Cổ phần Sữa Việt Nam (Vinamilk)', '0283915815', N'10 Tân Trào, Tân Phú, Quận 7, TP.HCM'), ('NCC02', N'Công ty TNHH Nước Giải Khát Suntory Pepsico', '0283821943', N'88 Đồng Khởi, Quận 1, TP.HCM'), ('NCC03', N'Tập đoàn Unilever Việt Nam', '0285413568', N'156 Nguyễn Lương Bằng, Quận 7, TP.HCM');
-INSERT INTO Kho (MaKho, TenKho, DiaChi) VALUES ('K01', N'Kho tổng siêu thị', N'Khu vực tầng hầm B1'), ('K02', N'Quầy trưng bày POS', N'Khu vực tầng trệt');
-INSERT INTO SanPham (MaSP, MaVach, MaLoai, TenSP, DonVi, GiaBan) VALUES ('SP001', '8934673123456', 'L01', N'Sữa tươi tiệt trùng Vinamilk ít đường 1L', N'Hộp', 32000), ('SP002', '8934588012134', 'L02', N'Nước ngọt Pepsi lon 320ml', 'Lon', 11000), ('SP003', '8934841901222', 'L02', N'Nước tăng lực Sting dâu chai 320ml', 'Chai', 10000), ('SP004', '8934637001452', 'L03', N'Dầu gội Clear mát lạnh bạc hà 630ml', 'Chai', 165000);
-INSERT INTO TonKho (MaKho, MaSP, SoLuongTonKho) VALUES ('K01', 'SP001', 150), ('K01', 'SP002', 300), ('K01', 'SP003', 200), ('K01', 'SP004', 50), ('K02', 'SP001', 20), ('K02', 'SP002', 45), ('K02', 'SP003', 30), ('K02', 'SP004', 10);
-INSERT INTO HoaDon (MaHD, NgayLap, MaNV, MaKH, TongTien, GiamGia, ThanhTien) VALUES ('HD2606010001', '2026-06-01T10:20:00', 'NV002', 'KH001', 97000, 5000, 92000), ('HD2606010002', '2026-06-01T11:45:00', 'NV002', 'KH003', 33000, 0, 33000);
-INSERT INTO ChiTietHoaDon (MaHD, MaSP, SoLuong, DonGiaBan, ThanhTien) VALUES ('HD2606010001', 'SP001', 2, 32000, 64000), ('HD2606010001', 'SP002', 3, 11000, 33000), ('HD2606010002', 'SP002', 1, 11000, 11000), ('HD2606010002', 'SP003', 3, 10000, 30000);
-INSERT INTO PhieuNhap (MaPN, NgayNhap, MaNCC, MaNV, TongTienNhap) VALUES ('PN260601001', '2026-06-01T08:30:00', 'NCC01', 'NV003', 4800000), ('PN260601002', '2026-06-01T09:15:00', 'NCC02', 'NV003', 2000000);
-INSERT INTO ChiTietPhieuNhap (MaPN, MaSP, SoLuongNhap, DonGiaNhap, HanSuDung) VALUES ('PN260601001', 'SP001', 150, 27000, '2026-12-01'), ('PN260601002', 'SP002', 100, 9000, '2027-03-01'), ('PN260601002', 'SP003', 100, 8000, '2027-02-15');
-GO
-
--- =======================================================
--- PHẦN 3: CÀI ĐẶT TÍNH NĂNG ACID (ĐỔI TRẢ HÀNG)
+-- PHẦN 1: CÀI ĐẶT TÍNH NĂNG ACID (ĐỔI TRẢ HÀNG)
 -- =======================================================
 
 -- 1. Hàm tính điểm thu hồi
@@ -165,6 +51,12 @@ END;
 GO
 
 -- 4. Bộ não xử lý Giao dịch Đổi trả chuẩn ACID
+-- !! CANH BAO QUAN TRONG !!
+-- TUYET DOI phai lay DonGiaBan tu bang ChiTietHoaDon (gia tai thoi diem mua).
+-- KHONG DUOC lay tu bang SanPham.GiaBan (gia hien hanh co the da thay doi).
+-- VD: Khach mua khuyen mai 40k, tuan sau het KM gia tang 60k,
+--     neu lay SanPham.GiaBan = 60k -> thoi tien 60k thay vi 40k -> THAT THOAT!
+-- LICH SU: 2026-06-18 - Xac nhan dung nguon gia tu ChiTietHoaDon
 CREATE OR ALTER PROCEDURE [dbo].[sp_GiaoTacTraHang]
     @MaPhieuDT varchar(15),
     @MaHD varchar(15),
@@ -182,12 +74,6 @@ BEGIN
         DECLARE @DonGiaBan money;
         DECLARE @MaKH varchar(10);
 
-        -- !! CANH BAO QUAN TRONG !!
-        -- TUYET DOI phai lay DonGiaBan tu bang ChiTietHoaDon (gia tai thoi diem mua).
-        -- KHONG DUOC lay tu bang SanPham.GiaBan (gia hien hanh co the da thay doi).
-        -- VD: Khach mua khuyen mai 40k, tuan sau het KM gia tang 60k,
-        --     neu lay SanPham.GiaBan = 60k -> thoi tien 60k thay vi 40k -> THAT THOAT!
-        -- LICH SU: 2026-06-18 - Xac nhan dung nguon gia tu ChiTietHoaDon
         SELECT @SoLuongDaMua = cthd.SoLuong,
                @DonGiaBan    = cthd.DonGiaBan    -- Gia lich su tai thoi diem khach mua
         FROM [dbo].[ChiTietHoaDon] AS cthd
@@ -213,23 +99,31 @@ BEGIN
         UPDATE [dbo].[TonKho] SET SoLuongTonKho = SoLuongTonKho + @SoLuongTra WHERE MaSP = @MaSP AND MaKho = @MaKho;
 
         COMMIT TRANSACTION;
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
         PRINT N'Thành công: Đã xử lý hoàn tiền, thu hồi điểm và cất hàng vào kho!';
 
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END;
 GO
 
-SELECT * FROM SanPham
+-- =======================================================
+-- PHẦN 2: KỊCH BẢN CHẠY THỬ NGHIỆM (TEST CASES)
+-- =======================================================
+
+-- Kiểm tra dữ liệu trước khi đổi trả
+SELECT * FROM SanPham;
 
 SELECT DiemTichLuy, UserName FROM KhachHang WHERE MaKH = 'KH001';
 SELECT TongTien, GhiChu FROM HoaDon WHERE MaHD = 'HD2606010001';
 SELECT SoLuongTonKho FROM TonKho WHERE MaSP = 'SP001' AND MaKho = 'K01';
 
+-- Thực hiện giao tác đổi trả
 EXEC sp_GiaoTacTraHang 
     @MaPhieuDT = 'DT001', 
     @MaHD = 'HD2606010001', 
@@ -238,7 +132,7 @@ EXEC sp_GiaoTacTraHang
     @MaKho = 'K01', 
     @LyDo = N'Khách chê hộp sữa bị móp';
 
-    -- 1. Điểm của khách bị trừ đi (không còn 120 điểm nữa)
+-- 1. Điểm của khách bị trừ đi (không còn 120 điểm nữa)
 SELECT DiemTichLuy, UserName FROM KhachHang WHERE MaKH = 'KH001';
 
 -- 2. Tiền hóa đơn bị giảm trừ 32.000đ (giá 1 hộp sữa) và có dòng Cảnh báo chữ "phốt"

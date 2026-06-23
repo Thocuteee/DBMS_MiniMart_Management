@@ -1,4 +1,4 @@
-﻿/*
+/*
 ================================================================================
   PHAN HE QUAN LY NHAP KHO - DUYET HANG TU NHA CUNG CAP
   Nguoi thuc hien : Duy
@@ -235,11 +235,10 @@ BEGIN
             @ErrSev   INT            = ERROR_SEVERITY(),
             @ErrState INT            = ERROR_STATE();
 
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
         RAISERROR(N'[SP_GIAOTACNHAPKHO - LOI] %s', @ErrSev, @ErrState, @ErrMsg);
 
     END CATCH;
-
-    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 END;
 GO
 
