@@ -13,6 +13,8 @@ import Warehouse from './pages/KhoSanPham/Warehouse';
 import POS from './pages/BanHang/POS';
 import Orders from './pages/BanHang/Orders';
 
+import MyOrders from './pages/MyOrders';
+
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -50,7 +52,7 @@ function App() {
           <Route path="categories" element={<Categories />} />
           <Route path="suppliers" element={<Suppliers />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="my-orders" element={<Placeholder title="Đơn hàng của tôi" />} />
+          <Route path="my-orders" element={<MyOrders />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
