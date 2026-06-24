@@ -1,20 +1,22 @@
 package com.sieuthi.demo.model;
 
+import java.sql.Date;
+
 public class ChiTietPhieuNhap {
     private String maPN;
     private String maSP;
     private Integer soLuongNhap;
     private Double donGiaNhap;
-    private Double thanhTienNhap;
+    private Date hanSuDung;
 
     public ChiTietPhieuNhap() {}
 
-    public ChiTietPhieuNhap(String maPN, String maSP, Integer soLuongNhap, Double donGiaNhap, Double thanhTienNhap) {
+    public ChiTietPhieuNhap(String maPN, String maSP, Integer soLuongNhap, Double donGiaNhap, Date hanSuDung) {
         this.maPN = maPN;
         this.maSP = maSP;
         this.soLuongNhap = soLuongNhap;
         this.donGiaNhap = donGiaNhap;
-        this.thanhTienNhap = thanhTienNhap;
+        this.hanSuDung = hanSuDung;
     }
 
     public String getMaPN() { 
@@ -41,10 +43,10 @@ public class ChiTietPhieuNhap {
     public void setDonGiaNhap(Double donGiaNhap) { 
         this.donGiaNhap = donGiaNhap; 
     }
-    public Double getThanhTienNhap() { 
-        return thanhTienNhap; 
+    public Date getHanSuDung() { 
+        return hanSuDung; 
     }
-    public void setThanhTienNhap(Double thanhTienNhap) { 
-        this.thanhTienNhap = thanhTienNhap; 
+    public void setHanSuDung(Date hanSuDung) { 
+        this.hanSuDung = hanSuDung; 
     }
 }

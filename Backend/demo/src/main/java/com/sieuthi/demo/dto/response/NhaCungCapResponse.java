@@ -7,5 +7,5 @@ public class NhaCungCapResponse {
     private String maNCC;
     private String nameNCC;
     private String phone;
-    private String diaChi;
+    private String address;
 }

@@ -7,6 +7,9 @@ import KhachHangNhanVien from './pages/KhachHangNhanVien';
 import Profile from './pages/Profile/Profile';
 import Categories from './pages/KhoSanPham/Categories';
 import Products from './pages/KhoSanPham/Products';
+import Suppliers from './pages/KhoSanPham/Suppliers';
+import Imports from './pages/NhapKho/Imports';
+import Warehouse from './pages/KhoSanPham/Warehouse';
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -38,11 +41,11 @@ function App() {
           <Route path="orders" element={<Placeholder title="Quản lý Hóa Đơn" />} />
           <Route path="customers" element={<KhachHangNhanVien defaultTab="khachhang" />} />
           <Route path="products" element={<Products />} />
-          <Route path="imports" element={<Placeholder title="Quản lý Nhập Kho" />} />
-          <Route path="warehouse" element={<Placeholder title="Kiểm kê Kho" />} />
+          <Route path="imports" element={<Imports />} />
+          <Route path="warehouse" element={<Warehouse />} />
           <Route path="employees" element={<KhachHangNhanVien defaultTab="nhanvien" />} />
           <Route path="categories" element={<Categories />} />
-          <Route path="suppliers" element={<Placeholder title="Nhà Cung Cấp" />} />
+          <Route path="suppliers" element={<Suppliers />} />
           <Route path="profile" element={<Profile />} />
           <Route path="my-orders" element={<Placeholder title="Đơn hàng của tôi" />} />
           <Route path="*" element={<Navigate to="/" replace />} />
