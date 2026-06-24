@@ -6,16 +6,16 @@ public class PhieuNhap {
     private String maPN;
     private LocalDateTime ngayNhap;
     private String maNV;
-    private String nhaCungCap;
+    private String maNCC;
     private Double tongTienNhap;
 
     public PhieuNhap() {}
 
-    public PhieuNhap(String maPN, LocalDateTime ngayNhap, String maNV, String nhaCungCap, Double tongTienNhap) {
+    public PhieuNhap(String maPN, LocalDateTime ngayNhap, String maNV, String maNCC, Double tongTienNhap) {
         this.maPN = maPN;
         this.ngayNhap = ngayNhap;
         this.maNV = maNV;
-        this.nhaCungCap = nhaCungCap;
+        this.maNCC = maNCC;
         this.tongTienNhap = tongTienNhap;
     }
 
@@ -37,11 +37,11 @@ public class PhieuNhap {
     public void setMaNV(String maNV) { 
         this.maNV = maNV; 
     }
-    public String getNhaCungCap() { 
-        return nhaCungCap; 
+    public String getMaNCC() { 
+        return maNCC; 
     }
-    public void setNhaCungCap(String nhaCungCap) { 
-        this.nhaCungCap = nhaCungCap; 
+    public void setMaNCC(String maNCC) { 
+        this.maNCC = maNCC; 
     }
     public Double getTongTienNhap() { 
         return tongTienNhap; 

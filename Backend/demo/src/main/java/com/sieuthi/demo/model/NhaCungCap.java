@@ -4,14 +4,14 @@ public class NhaCungCap {
     private String maNCC;
     private String nameNCC;
     private String phone;
-    private String diaChi;
+    private String address;
 
     public NhaCungCap() {}
-    public NhaCungCap(String maNCC, String nameNCC, String phone, String diaChi) {
+    public NhaCungCap(String maNCC, String nameNCC, String phone, String address) {
         this.maNCC = maNCC;
         this.nameNCC = nameNCC;
         this.phone = phone;
-        this.diaChi = diaChi;
+        this.address = address;
     }
 
     public String getMaNCC() { 
@@ -32,10 +32,10 @@ public class NhaCungCap {
     public void setPhone(String phone) {
         this.phone = phone; 
     }
-    public String getDiaChi() {
-        return diaChi; 
+    public String getAddress() {
+        return address; 
     }
-    public void setDiaChi(String diaChi) {
-        this.diaChi = diaChi;   
+    public void setAddress(String address) {
+        this.address = address;   
     }
 }

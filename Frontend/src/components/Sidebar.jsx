@@ -86,7 +86,8 @@ const Sidebar = () => {
                 </div>
                 {openMenus.sales && (
                   <ul className="sub-menu">
-                    <li><NavLink to="/orders">Đơn hàng (Hóa Đơn)</NavLink></li>
+                    <li><NavLink to="/pos">Bán hàng (POS)</NavLink></li>
+                    <li><NavLink to="/orders">Lịch sử Hóa Đơn</NavLink></li>
                     <li><NavLink to="/customers">Khách hàng</NavLink></li>
                   </ul>
                 )}

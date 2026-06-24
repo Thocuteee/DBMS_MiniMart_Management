@@ -117,52 +117,54 @@ const Products = () => {
       </div>
 
       <div className="card">
-        <div className="table-responsive">
-          <table className="table table-hover mb-0">
-            <thead className="table-light">
-              <tr>
-                <th>Mã SP</th>
-                <th>Mã Vạch</th>
-                <th>Tên Sản Phẩm</th>
-                <th>Danh mục</th>
-                <th>Đơn vị</th>
-                <th className="text-end">Giá Bán</th>
-                <th className="text-center">Hình Ảnh</th>
-                <th className="text-end">Thao tác</th>
+        <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#fff' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+          <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+            <tr>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569', width: '80px', textAlign: 'center' }}>Ảnh</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Mã SP</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Tên Sản Phẩm</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Danh Mục</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Giá Bán</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Đơn Vị</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569', textAlign: 'center' }}>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {products.map((p, index) => (
+              <tr key={index} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }}>
+                <td style={{ padding: '12px 24px', textAlign: 'center' }}>
+                  {p.hinhAnh ? (
+                    <img src={p.hinhAnh} alt={p.tenSP} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px' }} />
+                  ) : (
+                    <div style={{ width: '40px', height: '40px', backgroundColor: '#f1f5f9', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                      <span className="text-muted" style={{fontSize: '10px'}}>N/A</span>
+                    </div>
+                  )}
+                </td>
+                <td style={{ padding: '16px 24px', fontWeight: 500, color: '#0f172a' }}>{p.maSP}</td>
+                <td style={{ padding: '16px 24px', fontWeight: 600, color: '#334155' }}>{p.tenSP}</td>
+                <td style={{ padding: '16px 24px', color: '#64748b' }}>
+                  <span style={{ backgroundColor: '#f1f5f9', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>{getCategoryName(p.maLoai)}</span>
+                </td>
+                <td style={{ padding: '16px 24px', fontWeight: 600, color: '#10b981' }}>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.giaBan)}</td>
+                <td style={{ padding: '16px 24px', color: '#64748b' }}>{p.donVi}</td>
+                <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                  <button className="btn btn-sm btn-outline-primary me-2 rounded-pill px-3" onClick={() => handleEdit(p)}><Edit2 size={14}/></button>
+                  <button className="btn btn-sm btn-outline-danger rounded-pill px-3" onClick={() => handleDelete(p.maSP)}><Trash2 size={14}/></button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {products.map((p, index) => (
-                <tr key={index}>
-                  <td className="fw-medium">{p.maSP}</td>
-                  <td>{p.maVach}</td>
-                  <td>{p.tenSP}</td>
-                  <td>{getCategoryName(p.maLoai)}</td>
-                  <td>{p.donVi}</td>
-                  <td className="text-end fw-bold text-success">
-                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.giaBan)}
-                  </td>
-                  <td className="text-center">
-                    {p.hinhAnh ? (
-                      <img src={p.hinhAnh} alt={p.tenSP} style={{width: '50px', height: '50px', objectFit: 'contain', borderRadius: '8px', background: '#f8f9fa', padding: '2px'}} />
-                    ) : (
-                      <span className="text-muted small">Trống</span>
-                    )}
-                  </td>
-                  <td className="text-end">
-                    <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleEdit(p)}><Edit2 size={14}/></button>
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(p.maSP)}><Trash2 size={14}/></button>
-                  </td>
-                </tr>
-              ))}
-              {products.length === 0 && (
-                <tr>
-                  <td colSpan="7" className="text-center py-4 text-muted">Chưa có sản phẩm nào</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+            ))}
+            {products.length === 0 && (
+              <tr>
+                <td colSpan="7" style={{ padding: '48px 24px', textAlign: 'center', color: '#94a3b8' }}>
+                  Chưa có sản phẩm nào
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
       </div>
 
       {showModal && (

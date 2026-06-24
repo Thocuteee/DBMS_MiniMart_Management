@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+@import "tailwindcss";
+
 :root {
   /* Colors - Light Theme */
   --bg-primary: #f3f6f9; /* Velzon light gray background */
@@ -191,4 +193,21 @@ ul, ol {
   border-radius: var(--radius-md);
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+.hover-shadow {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-shadow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+}
+
+.hover-bg-danger:hover {
+  background-color: var(--danger) !important;
+  color: white !important;
+}
+
+.hover-bg-light:hover {
+  background-color: var(--bg-primary) !important;
 }
