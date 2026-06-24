@@ -11,7 +11,8 @@ public class SanPhamMapper {
         if (request == null) return null;
         return new SanPham(
             request.getMaSP(), request.getMaVach(), request.getMaLoai(),
-            request.getTenSP(), request.getDonVi(), request.getGiaBan()
+            request.getTenSP(), request.getDonVi(), request.getGiaBan(),
+            request.getHinhAnh()
         );
     }
 }

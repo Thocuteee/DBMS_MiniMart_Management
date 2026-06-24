@@ -1,5 +1,6 @@
 package com.sieuthi.demo.controller;
 
+import com.sieuthi.demo.dto.request.LoaiSanPhamRequest;
 import com.sieuthi.demo.dto.response.NhaCungCapResponse;
 import com.sieuthi.demo.dto.response.LoaiSanPhamResponse;
 import com.sieuthi.demo.dto.response.KhoResponse;
@@ -33,6 +34,26 @@ public class DanhMucBoTroController {
     @GetMapping("/loai-san-pham")
     public ResponseEntity<List<LoaiSanPhamResponse>> layTatCaLoai() {
         return ResponseEntity.ok(loaiSanPhamService.layTatCaLoaiSP());
+    }
+
+    @PostMapping("/loai-san-pham")
+    public ResponseEntity<String> themLoaiSP(@RequestBody LoaiSanPhamRequest request) {
+        try {
+            loaiSanPhamService.themLoaiSP(request);
+            return ResponseEntity.ok("Thêm danh mục thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/loai-san-pham")
+    public ResponseEntity<String> suaLoaiSP(@RequestBody LoaiSanPhamRequest request) {
+        return ResponseEntity.ok("Sửa danh mục thành công!");
+    }
+
+    @DeleteMapping("/loai-san-pham/{maLoai}")
+    public ResponseEntity<String> xoaLoaiSP(@PathVariable String maLoai) {
+        return ResponseEntity.ok("Xóa danh mục thành công!");
     }
 
     @GetMapping("/kho-hang")

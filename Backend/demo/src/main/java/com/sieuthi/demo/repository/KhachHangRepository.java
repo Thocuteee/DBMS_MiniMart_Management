@@ -83,7 +83,7 @@ public class KhachHangRepository {
                         int currentNum = Integer.parseInt(maxMaKH.substring(2));
                         return String.format("KH%03d", currentNum + 1);
                     } catch (NumberFormatException e) {
-                        // ignore and default
+                        
                     }
                 }
             }

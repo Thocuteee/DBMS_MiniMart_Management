@@ -8,4 +8,6 @@ import com.sieuthi.demo.dto.response.SanPhamResponse;
 public interface SanPhamService {
     List<SanPhamResponse> layTatCaSanPham();
     void themSanPham(SanPhamRequest request);
+    void suaSanPham(SanPhamRequest request);
+    void xoaSanPham(String maSP);
 }

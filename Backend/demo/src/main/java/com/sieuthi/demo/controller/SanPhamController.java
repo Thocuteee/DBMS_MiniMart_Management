@@ -31,10 +31,21 @@ public class SanPhamController {
         }
     }
 
-    @PutMapping("/cap-nhat-gia")
-    public ResponseEntity<String> capNhatGiaBan(@RequestParam String maSP, @RequestParam double giaMoi) {
+    @PutMapping
+    public ResponseEntity<String> capNhatSanPham(@RequestBody SanPhamRequest request) {
         try {
-            return ResponseEntity.ok("Đã cập nhật giá bán mới cho sản phẩm " + maSP);
+            sanPhamService.suaSanPham(request);
+            return ResponseEntity.ok("Cập nhật sản phẩm thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{maSP}")
+    public ResponseEntity<String> xoaSanPham(@PathVariable String maSP) {
+        try {
+            sanPhamService.xoaSanPham(maSP);
+            return ResponseEntity.ok("Xóa sản phẩm thành công!");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
