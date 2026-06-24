@@ -164,36 +164,36 @@ const NhanVienTab = () => {
 
       {error && <div className="alert alert-danger mb-3 p-3 bg-danger-light text-danger rounded">{error}</div>}
 
-      <div className="card table-responsive p-0">
-        <table className="data-table">
-          <thead>
+      <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#fff' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+          <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
             <tr>
-              <th>Mã NV</th>
-              <th>Họ Tên</th>
-              <th>Số Điện Thoại</th>
-              <th>Vai Trò</th>
-              <th>Tài Khoản</th>
-              <th>Trạng Thái</th>
-              <th className="text-right">Hành Động</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Mã NV</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Họ Tên</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Số Điện Thoại</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Vai Trò</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Tài Khoản</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Trạng Thái</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569', textAlign: 'right' }}>Hành Động</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="7" className="text-center py-4">Đang tải dữ liệu...</td></tr>
+              <tr><td colSpan="7" style={{ padding: '24px', textAlign: 'center' }}>Đang tải dữ liệu...</td></tr>
             ) : filteredStaff.length > 0 ? (
               filteredStaff.map(s => (
-                <tr key={s.maNV}>
-                  <td><strong>{s.maNV}</strong></td>
-                  <td>{s.hoTen}</td>
-                  <td>{s.phone}</td>
-                  <td><span className={`badge ${s.role === 'Quản Lý' ? 'bg-primary-light text-primary' : 'bg-info-light text-info'}`}>{s.role}</span></td>
-                  <td>{s.userName}</td>
-                  <td>
-                    <span className={`badge ${s.status === true ? 'bg-success-light text-success' : 'bg-danger-light text-danger'}`}>
+                <tr key={s.maNV} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '16px 24px', fontWeight: 500 }}>{s.maNV}</td>
+                  <td style={{ padding: '16px 24px' }}>{s.hoTen}</td>
+                  <td style={{ padding: '16px 24px' }}>{s.phone}</td>
+                  <td style={{ padding: '16px 24px' }}>{s.role}</td>
+                  <td style={{ padding: '16px 24px' }}>{s.userName}</td>
+                  <td style={{ padding: '16px 24px' }}>
+                    <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '0.75rem', backgroundColor: s.status ? '#dcfce7' : '#fee2e2', color: s.status ? '#166534' : '#991b1b' }}>
                       {s.status === true ? 'Hoạt động' : 'Nghỉ việc'}
                     </span>
                   </td>
-                  <td>
+                  <td style={{ padding: '16px 24px', textAlign: 'right' }}>
                     <div className="action-btns justify-content-end">
                       <button className="btn-icon edit" onClick={() => handleOpenModal(s)}>
                         <Edit2 size={16} />

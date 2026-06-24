@@ -48,12 +48,22 @@ public class DanhMucBoTroController {
 
     @PutMapping("/loai-san-pham")
     public ResponseEntity<String> suaLoaiSP(@RequestBody LoaiSanPhamRequest request) {
-        return ResponseEntity.ok("Sửa danh mục thành công!");
+        try {
+            loaiSanPhamService.suaLoaiSP(request);
+            return ResponseEntity.ok("Sửa danh mục thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/loai-san-pham/{maLoai}")
     public ResponseEntity<String> xoaLoaiSP(@PathVariable String maLoai) {
-        return ResponseEntity.ok("Xóa danh mục thành công!");
+        try {
+            loaiSanPhamService.xoaLoaiSP(maLoai);
+            return ResponseEntity.ok("Xóa danh mục thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/kho-hang")

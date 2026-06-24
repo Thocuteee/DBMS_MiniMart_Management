@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class PhieuNhapRepository {
@@ -27,6 +28,32 @@ public class PhieuNhapRepository {
                 res.setTenNhanVienKho(rs.getString("HoTen"));
                 res.setTongTienNhap(rs.getDouble("TongTienNhap"));
                 list.add(res);
+            }
+        }
+        return list;
+    }
+
+    public List<Map<String, Object>> findChiTietByMaPN(String maPN) throws SQLException {
+        List<java.util.Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT ct.MaSP, sp.TenSP, ct.SoLuongNhap, ct.DonGiaNhap, ct.HanSuDung " +
+                    "FROM ChiTietPhieuNhap ct " +
+                    "JOIN SanPham sp ON ct.MaSP = sp.MaSP " +
+                    "WHERE ct.MaPN = ?";
+
+        try (Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            ps.setString(1, maPN);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("maSP", rs.getString("MaSP"));
+                    map.put("tenSP", rs.getString("TenSP"));
+                    map.put("soLuongNhap", rs.getInt("SoLuongNhap"));
+                    map.put("donGiaNhap", rs.getDouble("DonGiaNhap"));
+                    map.put("hanSuDung", rs.getDate("HanSuDung"));
+                    list.add(map);
+                }
             }
         }
         return list;

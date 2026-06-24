@@ -33,4 +33,22 @@ public class LoaiSanPhamServiceImpl implements LoaiSanPhamService {
             throw new RuntimeException("Lỗi thêm loại sản phẩm: " + e.getMessage());
         }
     }
+
+    @Override
+    public void suaLoaiSP(LoaiSanPhamRequest request) {
+        try {
+            loaiSanPhamRepository.update(request);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi sửa loại sản phẩm: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void xoaLoaiSP(String maLoai) {
+        try {
+            loaiSanPhamRepository.delete(maLoai);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi xóa loại sản phẩm: " + e.getMessage());
+        }
+    }
 }

@@ -30,4 +30,13 @@ public class NhapKhoController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/{maPN}/chi-tiet")
+    public ResponseEntity<?> xemChiTietPhieuNhap(@PathVariable String maPN) {
+        try {
+            return ResponseEntity.ok(phieuNhapService.xemChiTietPhieuNhap(maPN));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

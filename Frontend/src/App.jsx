@@ -10,6 +10,8 @@ import Products from './pages/KhoSanPham/Products';
 import Suppliers from './pages/KhoSanPham/Suppliers';
 import Imports from './pages/NhapKho/Imports';
 import Warehouse from './pages/KhoSanPham/Warehouse';
+import POS from './pages/BanHang/POS';
+import Orders from './pages/BanHang/Orders';
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -38,7 +40,8 @@ function App() {
           </PrivateRoute>
         }>
           <Route index element={<Dashboard />} />
-          <Route path="orders" element={<Placeholder title="Quản lý Hóa Đơn" />} />
+          <Route path="pos" element={<POS />} />
+          <Route path="orders" element={<Orders />} />
           <Route path="customers" element={<KhachHangNhanVien defaultTab="khachhang" />} />
           <Route path="products" element={<Products />} />
           <Route path="imports" element={<Imports />} />

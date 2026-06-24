@@ -8,4 +8,6 @@ import com.sieuthi.demo.dto.response.LoaiSanPhamResponse;
 public interface LoaiSanPhamService {
     List<LoaiSanPhamResponse> layTatCaLoaiSP();
     void themLoaiSP(LoaiSanPhamRequest request);
+    void suaLoaiSP(LoaiSanPhamRequest request);
+    void xoaLoaiSP(String maLoai);
 }

@@ -167,47 +167,49 @@ const KhachHangTab = () => {
 
       {error && <div className="alert alert-danger mb-3 p-3 bg-danger-light text-danger rounded">{error}</div>}
 
-      <div className="card table-responsive p-0">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Mã KH</th>
-              <th>Tên Khách Hàng</th>
-              <th>Số Điện Thoại</th>
-              <th>Điểm Tích Lũy</th>
-              <th className="text-right">Hành Động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan="5" className="text-center py-4">Đang tải dữ liệu...</td></tr>
-            ) : filteredCustomers.length > 0 ? (
-              filteredCustomers.map(c => (
-                <tr key={c.maKH}>
-                  <td><strong>{c.maKH}</strong></td>
-                  <td>{c.userName}</td>
-                  <td>{c.phone}</td>
-                  <td><span className="badge bg-success-light text-success">{c.diemTichLuy} đ</span></td>
-                  <td>
-                    <div className="action-btns justify-content-end">
-                      <button className="btn-icon edit" onClick={() => handleOpenModal(c)}>
-                        <Edit2 size={16} />
-                      </button>
-                      <button className="btn-icon delete" onClick={() => handleDelete(c.maKH)}>
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+        <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#fff' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+            <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+              <tr>
+                <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Mã KH</th>
+                <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Tên Khách Hàng</th>
+                <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Số Điện Thoại</th>
+                <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Điểm Tích Lũy</th>
+                <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569', textAlign: 'center' }}>Hành Động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan="5" style={{ padding: '48px 24px', textAlign: 'center' }}>Đang tải dữ liệu...</td></tr>
+              ) : filteredCustomers.length > 0 ? (
+                filteredCustomers.map(c => (
+                  <tr key={c.maKH} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '16px 24px', fontWeight: 500 }}>{c.maKH}</td>
+                    <td style={{ padding: '16px 24px' }}>{c.userName}</td>
+                    <td style={{ padding: '16px 24px' }}>{c.phone}</td>
+                    <td style={{ padding: '16px 24px' }}><span className="badge bg-success-light text-success">{c.diemTichLuy} đ</span></td>
+                    <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                      <div className="action-btns justify-content-center">
+                        <button className="btn-icon edit" onClick={() => handleOpenModal(c)}>
+                          <Edit2 size={16} />
+                        </button>
+                        <button className="btn-icon delete" onClick={() => handleDelete(c.maKH)}>
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" style={{ padding: '48px 24px', textAlign: 'center', color: '#94a3b8' }}>
+                    Không tìm thấy khách hàng nào.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="text-center text-muted py-4">Không tìm thấy khách hàng nào.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              )}
+            </tbody>
+          </table>
+        </div>
 
       {/* Pagination Mock */}
       <div className="pagination">

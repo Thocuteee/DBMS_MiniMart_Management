@@ -4,6 +4,8 @@ import axios from 'axios';
 const Imports = () => {
   const [imports, setImports] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedImport, setSelectedImport] = useState(null);
   const [error, setError] = useState(null);
 
   // Dữ liệu phụ trợ để tạo phiếu nhập
@@ -65,6 +67,20 @@ const Imports = () => {
 
   const handleClose = () => setShowModal(false);
 
+  const fetchChiTiet = async (pn) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`http://localhost:8080/api/v1/phieu-nhap/${pn.maPN}/chi-tiet`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedImport({ ...pn, chiTietList: response.data });
+      setShowDetailModal(true);
+    } catch (err) {
+      console.error(err);
+      alert('Lỗi tải chi tiết phiếu nhập');
+    }
+  };
+
   const addProductToImport = () => {
     if (!currentSP.maSP || currentSP.soLuongNhap <= 0 || currentSP.donGiaNhap < 0 || !currentSP.hanSuDung) {
       alert("Vui lòng điền đầy đủ và hợp lệ thông tin sản phẩm nhập (bao gồm Hạn sử dụng)");
@@ -125,30 +141,39 @@ const Imports = () => {
 
       {error && <div className="alert alert-danger">{error}</div>}
 
-      <div className="table-responsive">
-        <table className="table table-striped table-hover align-middle">
-          <thead className="table-dark">
+      <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#fff' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+          <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
             <tr>
-              <th>Mã Phiếu Nhập</th>
-              <th>Ngày Nhập</th>
-              <th>Nhà Cung Cấp</th>
-              <th>Người Nhập</th>
-              <th>Tổng Tiền</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Mã Phiếu Nhập</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Ngày Lập</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Người Lập (Nhân Viên)</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Nhà Cung Cấp</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Tổng Tiền</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569', textAlign: 'center' }}>Chi tiết</th>
             </tr>
           </thead>
           <tbody>
-            {imports.map(imp => (
-              <tr key={imp.maPN}>
-                <td><strong>{imp.maPN}</strong></td>
-                <td>{new Date(imp.ngayNhap).toLocaleString('vi-VN')}</td>
-                <td>{imp.nameNCC}</td>
-                <td>{imp.tenNhanVienKho}</td>
-                <td className="text-success fw-bold">{formatCurrency(imp.tongTienNhap)}</td>
+            {imports.map(pn => (
+              <tr key={pn.maPN} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }}>
+                <td style={{ padding: '16px 24px', fontWeight: 500, color: '#0f172a' }}>{pn.maPN}</td>
+                <td style={{ padding: '16px 24px', color: '#64748b' }}>{new Date(pn.ngayNhap).toLocaleString('vi-VN')}</td>
+                <td style={{ padding: '16px 24px', fontWeight: 600, color: '#334155' }}>{pn.tenNhanVienKho || '-'}</td>
+                <td style={{ padding: '16px 24px', color: '#334155' }}>{pn.nameNCC || '-'}</td>
+                <td style={{ padding: '16px 24px', fontWeight: 600, color: '#10b981' }}>{formatCurrency(pn.tongTienNhap)}</td>
+                <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                  <button className="btn btn-sm btn-outline-info rounded-pill px-3" onClick={() => fetchChiTiet(pn)}>
+                    <i className="bi bi-eye"></i> Xem
+                  </button>
+                </td>
               </tr>
             ))}
             {imports.length === 0 && (
               <tr>
-                <td colSpan="5" className="text-center">Chưa có phiếu nhập nào</td>
+                <td colSpan="6" style={{ padding: '48px 24px', textAlign: 'center', color: '#94a3b8' }}>
+                  <i className="bi bi-inbox fs-1 mb-2 d-block"></i>
+                  Chưa có phiếu nhập nào
+                </td>
               </tr>
             )}
           </tbody>
@@ -261,6 +286,63 @@ const Imports = () => {
             <div className="d-flex justify-content-end gap-2 mt-4 pt-4 border-top">
               <button type="button" onClick={handleClose} style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: '#fff', color: '#0f172a', fontWeight: 500 }}>Hủy bỏ</button>
               <button type="button" onClick={handleSubmit} style={{ padding: '10px 20px', borderRadius: '6px', border: 'none', backgroundColor: '#0f172a', color: '#fff', fontWeight: 500 }}>Lưu & Nhập Kho</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDetailModal && selectedImport && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setShowDetailModal(false)}></div>
+          
+          <div style={{ position: 'relative', backgroundColor: '#fff', borderRadius: '12px', width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', zIndex: 10000 }}>
+            <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+              <div>
+                <h4 className="fw-bold m-0" style={{ color: '#0f172a' }}>Chi Tiết Phiếu Nhập</h4>
+                <div style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '4px' }}>Mã: {selectedImport.maPN} - Nhà CC: {selectedImport.nameNCC}</div>
+              </div>
+              <button onClick={() => setShowDetailModal(false)} style={{ background: 'transparent', border: 'none', fontSize: '1.5rem', lineHeight: 1, color: '#64748b', cursor: 'pointer' }}>&times;</button>
+            </div>
+
+            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+                <thead style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}>
+                  <tr>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Sản phẩm</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Số lượng</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Đơn giá</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569', textAlign: 'right' }}>Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedImport.chiTietList?.map((ct, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 500, color: '#0f172a' }}>{ct.tenSP || ct.maSP}</td>
+                      <td style={{ padding: '12px 16px', color: '#334155' }}>{ct.soLuongNhap}</td>
+                      <td style={{ padding: '12px 16px', color: '#334155' }}>{formatCurrency(ct.donGiaNhap)}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#10b981' }}>{formatCurrency(ct.soLuongNhap * ct.donGiaNhap)}</td>
+                    </tr>
+                  ))}
+                  {(!selectedImport.chiTietList || selectedImport.chiTietList.length === 0) && (
+                    <tr>
+                      <td colSpan="4" style={{ padding: '24px 16px', textAlign: 'center', color: '#94a3b8' }}>Không có chi tiết.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="d-flex justify-content-end mt-4">
+              <div style={{ width: '250px' }}>
+                <div className="d-flex justify-content-between pt-2" style={{ borderTop: '1px solid #e2e8f0' }}>
+                  <span style={{ color: '#0f172a', fontWeight: 700 }}>Tổng tiền:</span>
+                  <span style={{ color: '#ef4444', fontWeight: 700 }}>{formatCurrency(selectedImport.tongTienNhap)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-end mt-4 pt-3 border-top">
+              <button className="btn btn-secondary rounded-pill px-4" onClick={() => setShowDetailModal(false)}>Đóng</button>
             </div>
           </div>
         </div>

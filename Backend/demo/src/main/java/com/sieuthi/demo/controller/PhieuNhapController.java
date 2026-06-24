@@ -34,5 +34,17 @@ public class PhieuNhapController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    @GetMapping("/{maPN}/chi-tiet")
+    public ResponseEntity<?> xemChiTietPhieuNhap(@PathVariable String maPN) {
+        try {
+            return ResponseEntity.ok(phieuNhapService.xemChiTietPhieuNhap(maPN));
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
 }
 

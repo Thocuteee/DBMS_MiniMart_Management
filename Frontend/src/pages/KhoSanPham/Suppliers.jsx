@@ -96,25 +96,25 @@ const Suppliers = () => {
 
       {error && <div className="alert alert-danger">{error}</div>}
 
-      <div className="table-responsive">
-        <table className="table table-striped table-hover align-middle">
-          <thead className="table-dark">
+      <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#fff' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+          <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
             <tr>
-              <th>Mã NCC</th>
-              <th>Tên Nhà Cung Cấp</th>
-              <th>Số Điện Thoại</th>
-              <th>Địa Chỉ</th>
-              <th className="text-center">Thao tác</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Mã NCC</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Tên Nhà Cung Cấp</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Điện Thoại</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569' }}>Địa Chỉ</th>
+              <th style={{ padding: '16px 24px', fontWeight: 600, color: '#475569', textAlign: 'center' }}>Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {suppliers.map(sup => (
-              <tr key={sup.maNCC}>
-                <td>{sup.maNCC}</td>
-                <td>{sup.nameNCC}</td>
-                <td>{sup.phone}</td>
-                <td>{sup.address}</td>
-                <td className="text-center">
+              <tr key={sup.maNCC} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }}>
+                <td style={{ padding: '16px 24px', fontWeight: 500, color: '#0f172a' }}>{sup.maNCC}</td>
+                <td style={{ padding: '16px 24px', fontWeight: 600, color: '#334155' }}>{sup.nameNCC}</td>
+                <td style={{ padding: '16px 24px', color: '#64748b' }}>{sup.phone}</td>
+                <td style={{ padding: '16px 24px', color: '#64748b' }}>{sup.address}</td>
+                <td style={{ padding: '16px 24px', textAlign: 'center' }}>
                   <button className="btn btn-sm btn-outline-primary me-2 rounded-pill px-3" onClick={() => handleShow(sup)}><i className="bi bi-pencil"></i> Sửa</button>
                   <button className="btn btn-sm btn-outline-danger rounded-pill px-3" onClick={() => handleDelete(sup.maNCC)}><i className="bi bi-trash"></i> Xóa</button>
                 </td>
@@ -122,7 +122,10 @@ const Suppliers = () => {
             ))}
             {suppliers.length === 0 && (
               <tr>
-                <td colSpan="5" className="text-center">Chưa có nhà cung cấp nào</td>
+                <td colSpan="5" style={{ padding: '48px 24px', textAlign: 'center', color: '#94a3b8' }}>
+                  <i className="bi bi-inbox fs-1 mb-2 d-block"></i>
+                  Chưa có nhà cung cấp nào
+                </td>
               </tr>
             )}
           </tbody>

@@ -35,4 +35,23 @@ public class LoaiSanPhamRepository {
             ps.executeUpdate();
         }
     }
+
+    public void update(LoaiSanPhamRequest req) throws SQLException {
+        String sql = "UPDATE LoaiSanPham SET TenLoai = ? WHERE MaLoai = ?";
+        try (Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, req.getTenLoai());
+            ps.setString(2, req.getMaLoai());
+            ps.executeUpdate();
+        }
+    }
+
+    public void delete(String maLoai) throws SQLException {
+        String sql = "DELETE FROM LoaiSanPham WHERE MaLoai = ?";
+        try (Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, maLoai);
+            ps.executeUpdate();
+        }
+    }
 }
