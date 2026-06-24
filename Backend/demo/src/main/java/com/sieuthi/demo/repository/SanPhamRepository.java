@@ -23,6 +23,7 @@ public class SanPhamRepository {
                         rs.getString("TenSP"),
                         rs.getString("DonVi"), 
                         rs.getDouble("GiaBan"), 
+                        rs.getString("HinhAnh"),
                         rs.getString("MaLoai"),
                         rs.getString("TenLoai")
                     );
@@ -33,7 +34,7 @@ public class SanPhamRepository {
     }
 
     public void save(SanPhamRequest req) throws SQLException {
-        String sql = "INSERT INTO SanPham (MaSP, MaVach, MaLoai, TenSP, DonVi, GiaBan) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO SanPham (MaSP, MaVach, MaLoai, TenSP, DonVi, GiaBan, HinhAnh) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, req.getMaSP());
@@ -42,6 +43,31 @@ public class SanPhamRepository {
             ps.setString(4, req.getTenSP());
             ps.setString(5, req.getDonVi());
             ps.setDouble(6, req.getGiaBan());
+            ps.setString(7, req.getHinhAnh());
+            ps.executeUpdate();
+        }
+    }
+
+    public void update(SanPhamRequest req) throws SQLException {
+        String sql = "UPDATE SanPham SET MaVach=?, MaLoai=?, TenSP=?, DonVi=?, GiaBan=?, HinhAnh=? WHERE MaSP=?";
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, req.getMaVach());
+            ps.setString(2, req.getMaLoai());
+            ps.setString(3, req.getTenSP());
+            ps.setString(4, req.getDonVi());
+            ps.setDouble(5, req.getGiaBan());
+            ps.setString(6, req.getHinhAnh());
+            ps.setString(7, req.getMaSP());
+            ps.executeUpdate();
+        }
+    }
+
+    public void delete(String maSP) throws SQLException {
+        String sql = "DELETE FROM SanPham WHERE MaSP=?";
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, maSP);
             ps.executeUpdate();
         }
     }

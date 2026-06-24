@@ -58,6 +58,8 @@ const Header = () => {
   // Determine display role
   let displayRole = "Thành viên";
   if (roles.includes("ROLE_ADMIN")) displayRole = "Admin";
+  else if (roles.includes("ROLE_THU_NGAN")) displayRole = "Thu Ngân";
+  else if (roles.includes("ROLE_THU_KHO")) displayRole = "Thủ Kho";
   else if (roles.includes("ROLE_NHAN_VIEN")) displayRole = "Nhân viên";
   else if (roles.includes("ROLE_KHACH_HANG")) displayRole = "Khách hàng";
 

@@ -13,6 +13,7 @@ public class SanPhamResponse {
     private String tenSP;
     private String donVi;
     private Double giaBan;
+    private String hinhAnh;
     private String maLoai;
     private String tenLoai;
 }

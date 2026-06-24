@@ -33,4 +33,22 @@ public class SanPhamServiceImpl implements SanPhamService {
             throw new RuntimeException("Lỗi thêm sản phẩm: " + e.getMessage());
         }
     }
+
+    @Override
+    public void suaSanPham(SanPhamRequest request) {
+        try {
+            sanPhamRepository.update(request);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi sửa sản phẩm: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void xoaSanPham(String maSP) {
+        try {
+            sanPhamRepository.delete(maSP);
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi xóa sản phẩm: " + e.getMessage());
+        }
+    }
 }

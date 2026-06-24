@@ -7,16 +7,18 @@ public class SanPham {
     private String tenSP;
     private String donVi;
     private Double giaBan;
+    private String hinhAnh;
 
     public SanPham() {}
 
-    public SanPham(String maSP, String maVach, String maLoai, String tenSP, String donVi, Double giaBan) {
+    public SanPham(String maSP, String maVach, String maLoai, String tenSP, String donVi, Double giaBan, String hinhAnh) {
         this.maSP = maSP;
         this.maVach = maVach;
         this.maLoai = maLoai;
         this.tenSP = tenSP;
         this.donVi = donVi;
         this.giaBan = giaBan;
+        this.hinhAnh = hinhAnh;
     }
 
     public String getMaSP() { 
@@ -60,4 +62,10 @@ public class SanPham {
         this.giaBan = giaBan; 
     }
     
+    public String getHinhAnh() {
+        return hinhAnh;
+    }
+    public void setHinhAnh(String hinhAnh) {
+        this.hinhAnh = hinhAnh;
+    }
 }

@@ -14,4 +14,5 @@ public class SanPhamRequest {
     private String tenSP;
     private String donVi;
     private Double giaBan;
+    private String hinhAnh;
 }
