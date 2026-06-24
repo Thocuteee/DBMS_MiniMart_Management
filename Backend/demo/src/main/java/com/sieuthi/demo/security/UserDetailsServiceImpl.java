@@ -40,6 +40,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 if (rawRole != null) {
                     if (rawRole.equals("1") || rawRole.equalsIgnoreCase("Quản Lý") || rawRole.equalsIgnoreCase("Admin")) {
                         roleStr = "ROLE_ADMIN";
+                    } else if (rawRole.equalsIgnoreCase("Thu Ngân")) {
+                        roleStr = "ROLE_THU_NGAN";
+                    } else if (rawRole.equalsIgnoreCase("Thủ Kho")) {
+                        roleStr = "ROLE_THU_KHO";
                     } else if (rawRole.equals("2") || rawRole.equalsIgnoreCase("Nhân Viên")) {
                         roleStr = "ROLE_NHAN_VIEN";
                     }

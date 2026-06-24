@@ -8,6 +8,7 @@ import com.sieuthi.demo.service.NhanVienService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -49,6 +50,11 @@ public class NhanVienServiceImpl implements NhanVienService {
         try {
             nhanVienRepository.delete(maNV);
         } catch (SQLException e) {
+            if (e.getMessage() != null && e.getMessage().contains("REFERENCE constraint")) {
+                throw new RuntimeException("Không thể xóa: Nhân viên này đã có dữ liệu giao dịch (Hóa đơn/Phiếu nhập).");
+            }
+            throw new RuntimeException("Lỗi xóa nhân viên: " + e.getMessage());
+        } catch (Exception e) {
             throw new RuntimeException("Lỗi xóa nhân viên: " + e.getMessage());
         }
     }

@@ -6,6 +6,7 @@ import com.sieuthi.demo.mapper.KhachHangMapper;
 import com.sieuthi.demo.repository.KhachHangRepository;
 import com.sieuthi.demo.service.KhachHangService;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,6 +53,11 @@ public class KhachHangServiceImpl implements KhachHangService {
         try {
             khachHangRepository.delete(maKH);
         } catch (SQLException e) {
+            if (e.getMessage() != null && e.getMessage().contains("REFERENCE constraint")) {
+                throw new RuntimeException("Không thể xóa: Khách hàng này đã có dữ liệu giao dịch (Hóa đơn).");
+            }
+            throw new RuntimeException("Lỗi xóa khách hàng: " + e.getMessage());
+        } catch (Exception e) {
             throw new RuntimeException("Lỗi xóa khách hàng: " + e.getMessage());
         }
     }

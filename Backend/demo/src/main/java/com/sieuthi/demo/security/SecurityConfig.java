@@ -48,10 +48,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/nhan-vien/**", "/api/v1/nhan-vien").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/nhan-vien/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/nhan-vien/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/v1/khach-hang/dang-ky").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers(HttpMethod.GET, "/api/v1/khach-hang/**", "/api/v1/khach-hang").hasAnyRole("ADMIN", "NHAN_VIEN")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/khach-hang/**").hasAnyRole("ADMIN", "NHAN_VIEN", "KHACH_HANG")
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/khach-hang/**").hasAnyRole("ADMIN", "NHAN_VIEN")
+                .requestMatchers(HttpMethod.POST, "/api/v1/khach-hang/dang-ky").hasAnyRole("ADMIN", "THU_NGAN", "NHAN_VIEN")
+                .requestMatchers(HttpMethod.GET, "/api/v1/khach-hang/**", "/api/v1/khach-hang").hasAnyRole("ADMIN", "THU_NGAN", "NHAN_VIEN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/khach-hang/**").hasAnyRole("ADMIN", "THU_NGAN", "NHAN_VIEN", "KHACH_HANG")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/khach-hang/**").hasAnyRole("ADMIN", "THU_NGAN", "NHAN_VIEN")
                 .anyRequest().authenticated()
             );
 

@@ -22,6 +22,8 @@ const Sidebar = () => {
   const roles = rolesString ? JSON.parse(rolesString) : [];
   const isAdmin = roles.includes('ROLE_ADMIN');
   const isNhanVien = roles.includes('ROLE_NHAN_VIEN');
+  const isThuNgan = roles.includes('ROLE_THU_NGAN') || isNhanVien;
+  const isThuKho = roles.includes('ROLE_THU_KHO') || isNhanVien;
   const isKhachHang = roles.includes('ROLE_KHACH_HANG');
   const [openMenus, setOpenMenus] = useState({
     sales: false,
@@ -71,11 +73,12 @@ const Sidebar = () => {
             </>
           )}
 
-          {/* Admin & NhanVien Menu */}
-          {(isAdmin || isNhanVien) && (
+          {/* Admin & Employees Menu */}
+          {(isAdmin || isThuNgan || isThuKho) && (
             <>
               {/* Sales Menu */}
-              <li className="nav-item">
+              {(isAdmin || isThuNgan) && (
+                <li className="nav-item">
                 <div className={`nav-link ${openMenus.sales ? 'open' : ''}`} onClick={() => toggleMenu('sales')}>
                   <ShoppingCart size={18} />
                   <span>Quản lý Bán hàng</span>
@@ -88,8 +91,10 @@ const Sidebar = () => {
                   </ul>
                 )}
               </li>
+              )}
 
               {/* Inventory Menu */}
+              {(isAdmin || isThuKho) && (
               <li className="nav-item">
                 <div className={`nav-link ${openMenus.inventory ? 'open' : ''}`} onClick={() => toggleMenu('inventory')}>
                   <Package size={18} />
@@ -106,6 +111,7 @@ const Sidebar = () => {
                   </ul>
                 )}
               </li>
+              )}
             </>
           )}
 

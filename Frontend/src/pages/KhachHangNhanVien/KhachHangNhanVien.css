@@ -122,8 +122,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(33, 37, 41, 0.5);
-  backdrop-filter: blur(2px);
+  background-color: rgba(33, 37, 41, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;

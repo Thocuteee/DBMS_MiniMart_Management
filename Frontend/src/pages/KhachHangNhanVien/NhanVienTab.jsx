@@ -19,7 +19,7 @@ const NhanVienTab = () => {
     role: 'Thu Ngân',
     userName: '',
     password: '',
-    status: 'Hoạt động'
+    status: true
   });
 
   const fetchStaff = async () => {
@@ -66,7 +66,7 @@ const NhanVienTab = () => {
         role: 'Thu Ngân',
         userName: '',
         password: '',
-        status: 'Hoạt động'
+        status: true
       });
     }
     setShowModal(true);
@@ -79,7 +79,11 @@ const NhanVienTab = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    let finalValue = value;
+    if (name === 'status') {
+      finalValue = value === 'true';
+    }
+    setFormData(prev => ({ ...prev, [name]: finalValue }));
   };
 
   const handleSubmit = async (e) => {
@@ -185,8 +189,8 @@ const NhanVienTab = () => {
                   <td><span className={`badge ${s.role === 'Quản Lý' ? 'bg-primary-light text-primary' : 'bg-info-light text-info'}`}>{s.role}</span></td>
                   <td>{s.userName}</td>
                   <td>
-                    <span className={`badge ${s.status === 'Hoạt động' ? 'bg-success-light text-success' : 'bg-danger-light text-danger'}`}>
-                      {s.status}
+                    <span className={`badge ${s.status === true ? 'bg-success-light text-success' : 'bg-danger-light text-danger'}`}>
+                      {s.status === true ? 'Hoạt động' : 'Nghỉ việc'}
                     </span>
                   </td>
                   <td>
@@ -224,7 +228,7 @@ const NhanVienTab = () => {
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} autoComplete="off">
               <div className="modal-body">
                 <div className="d-flex gap-3">
                   <div className="form-group flex-1 w-100">
@@ -261,8 +265,8 @@ const NhanVienTab = () => {
                 <div className="form-group mb-0">
                   <label className="form-label">Trạng Thái</label>
                   <select className="form-select" name="status" value={formData.status} onChange={handleChange}>
-                    <option value="Hoạt động">Hoạt động</option>
-                    <option value="Nghỉ việc">Nghỉ việc</option>
+                    <option value="true">Hoạt động</option>
+                    <option value="false">Nghỉ việc</option>
                   </select>
                 </div>
 
