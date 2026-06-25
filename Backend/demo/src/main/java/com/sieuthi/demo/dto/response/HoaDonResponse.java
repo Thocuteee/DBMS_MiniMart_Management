@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 public class HoaDonResponse {
     private String maHD;
+    private String maKH;
     private LocalDateTime ngayLap;
     private String tenNhanVien;
     private String tenKhachHang;

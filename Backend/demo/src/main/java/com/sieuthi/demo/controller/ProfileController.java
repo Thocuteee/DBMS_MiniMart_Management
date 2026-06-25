@@ -38,10 +38,12 @@ public class ProfileController {
         try {
             if (isCustomer) {
                 try (java.sql.Connection con = com.sieuthi.demo.config.DatabaseConnection.getConnection();
-                     java.sql.PreparedStatement ps = con.prepareStatement("SELECT * FROM KhachHang WHERE UserName = ?")) {
+                     java.sql.PreparedStatement ps = con.prepareStatement("SELECT * FROM KhachHang WHERE Phone = ? OR UserName = ?")) {
                     ps.setString(1, username);
+                    ps.setString(2, username);
                     try (java.sql.ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
+                            profileData.put("maKH", rs.getString("MaKH"));
                             profileData.put("fullName", username); // No name column in DB
                             profileData.put("phone", rs.getString("Phone"));
                             profileData.put("points", rs.getInt("DiemTichLuy"));

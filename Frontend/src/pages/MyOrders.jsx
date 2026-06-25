@@ -15,14 +15,17 @@ const MyOrders = () => {
   const fetchMyOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const username = localStorage.getItem('username'); // KhachHang username
+      const profileRes = await axios.get('http://localhost:8080/api/v1/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const myMaKH = profileRes.data.maKH;
       
       const response = await axios.get('http://localhost:8080/api/v1/hoa-don', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       // Filter orders for this customer only
-      const myOrders = response.data.filter(o => o.tenKhachHang === username);
+      const myOrders = response.data.filter(o => o.maKH === myMaKH);
       
       // Sort by latest date
       myOrders.sort((a, b) => new Date(b.ngayLap) - new Date(a.ngayLap));
@@ -49,9 +52,9 @@ const MyOrders = () => {
   }
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: '#f8f9ff', minHeight: '100vh' }}>
+    <div className="container-fluid py-4 bg-body-tertiary" style={{ minHeight: '100vh' }}>
       <div className="mb-4">
-        <h3 className="fw-bold text-dark d-flex align-items-center gap-2">
+        <h3 className="fw-bold text-body-emphasis d-flex align-items-center gap-2">
           <ShoppingBag className="text-primary" size={28} /> Đơn hàng của tôi
         </h3>
         <p className="text-muted">Lịch sử mua hàng và chi tiết các đơn hàng của bạn.</p>
@@ -65,10 +68,10 @@ const MyOrders = () => {
 
       {orders.length === 0 && !error ? (
         <div className="card shadow-sm border-0 rounded-4 p-5 text-center">
-          <div className="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '80px', height: '80px' }}>
+          <div className="bg-body-secondary rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '80px', height: '80px' }}>
             <ShoppingBag size={40} className="text-muted opacity-50" />
           </div>
-          <h4 className="fw-bold text-dark">Bạn chưa có đơn hàng nào</h4>
+          <h4 className="fw-bold text-body-emphasis">Bạn chưa có đơn hàng nào</h4>
           <p className="text-muted">Hãy bắt đầu mua sắm để tích điểm và nhận ưu đãi nhé!</p>
           <button className="btn btn-primary px-4 py-2 mt-2 rounded-pill shadow-sm" onClick={() => window.location.href = '/'}>
             Khám phá sản phẩm
@@ -88,19 +91,19 @@ const MyOrders = () => {
                   
                   {/* Order Summary Header (Clickable) */}
                   <div 
-                    className="card-body p-4 cursor-pointer hover-bg-light" 
+                    className="card-body p-4 cursor-pointer hover-bg-body-secondary" 
                     onClick={() => toggleOrder(order.maHD)}
                     style={{ cursor: 'pointer' }}
                   >
                     <div className="row align-items-center">
                       <div className="col-md-3 mb-3 mb-md-0">
                         <div className="text-muted small fw-bold text-uppercase mb-1">Mã Đơn Hàng</div>
-                        <div className="fw-bold fs-5 text-dark">#{order.maHD}</div>
+                        <div className="fw-bold fs-5 text-body-emphasis">#{order.maHD}</div>
                       </div>
                       
                       <div className="col-md-3 mb-3 mb-md-0">
                         <div className="text-muted small fw-bold text-uppercase mb-1"><Calendar size={14} className="me-1"/> Ngày Mua</div>
-                        <div className="fw-medium text-dark">{orderDate}</div>
+                        <div className="fw-medium text-body-emphasis">{orderDate}</div>
                       </div>
                       
                       <div className="col-md-3 mb-3 mb-md-0">
@@ -119,7 +122,7 @@ const MyOrders = () => {
 
                   {/* Order Details (Expanded) */}
                   {isExpanded && (
-                    <div className="card-footer bg-white border-top p-4">
+                    <div className="card-footer bg-body border-top p-4">
                       <h6 className="fw-bold mb-3">Chi tiết sản phẩm</h6>
                       
                       <div className="table-responsive mb-4">
@@ -135,7 +138,7 @@ const MyOrders = () => {
                             {order.chiTietList.map((item, idx) => (
                               <tr key={idx} className="border-bottom border-light">
                                 <td className="py-3">
-                                  <div className="fw-semibold text-dark">{item.tenSP}</div>
+                                  <div className="fw-semibold text-body-emphasis">{item.tenSP}</div>
                                   <div className="text-muted small">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.donGiaBan)}</div>
                                 </td>
                                 <td className="text-center py-3">x{item.soLuong}</td>
@@ -150,7 +153,7 @@ const MyOrders = () => {
 
                       <div className="row justify-content-end">
                         <div className="col-md-5 col-lg-4">
-                          <div className="bg-light rounded-3 p-3">
+                          <div className="bg-body-secondary rounded-3 p-3">
                             <div className="d-flex justify-content-between mb-2 small">
                               <span className="text-muted">Cộng tiền hàng:</span>
                               <span className="fw-medium">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.tongTien)}</span>
@@ -161,7 +164,7 @@ const MyOrders = () => {
                             </div>
                             <hr className="my-2 opacity-25" />
                             <div className="d-flex justify-content-between align-items-center">
-                              <span className="fw-bold text-dark">THÀNH TIỀN:</span>
+                              <span className="fw-bold text-body-emphasis">THÀNH TIỀN:</span>
                               <span className="fs-5 fw-bold text-primary">
                                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.thanhTien)}
                               </span>

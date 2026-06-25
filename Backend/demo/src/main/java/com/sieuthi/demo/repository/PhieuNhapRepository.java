@@ -60,43 +60,28 @@ public class PhieuNhapRepository {
     }
 
     public void save(PhieuNhapRequest req) throws SQLException {
-        String insertPN = "INSERT INTO PhieuNhap (MaPN, NgayNhap, MaNCC, MaNV, TongTienNhap) VALUES (?, ?, ?, ?, ?)";
-        String insertCT = "INSERT INTO ChiTietPhieuNhap (MaPN, MaSP, SoLuongNhap, DonGiaNhap, HanSuDung) VALUES (?, ?, ?, ?, ?)";
+        String callSP = "{call sp_GiaoTacNhapKho(?, ?, ?, ?, ?, ?, ?, ?)}";
         
         Connection con = null;
         try {
             con = DatabaseConnection.getConnection();
-            con.setAutoCommit(false); // Bắt đầu transaction
+            con.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); 
+            con.setAutoCommit(false); 
 
-            // 1. Tính tổng tiền và insert PhieuNhap
-            double tongTien = 0;
-            if (req.getChiTietList() != null) {
-                for (ChiTietPhieuNhapRequest ct : req.getChiTietList()) {
-                    tongTien += ct.getSoLuongNhap() * ct.getDonGiaNhap();
-                }
-            }
-
-            try (PreparedStatement psPN = con.prepareStatement(insertPN)) {
-                psPN.setString(1, req.getMaPN());
-                psPN.setTimestamp(2, new Timestamp(System.currentTimeMillis())); // Lấy thời gian hiện tại
-                psPN.setString(3, req.getMaNCC());
-                psPN.setString(4, "NV001"); // Tạm thời hardcode nhân viên kho
-                psPN.setDouble(5, tongTien);
-                psPN.executeUpdate();
-            }
-
-            // 2. Insert ChiTietPhieuNhap (Trigger sẽ tự động kích hoạt sau mỗi dòng insert)
             if (req.getChiTietList() != null && !req.getChiTietList().isEmpty()) {
-                try (PreparedStatement psCT = con.prepareStatement(insertCT)) {
+                try (CallableStatement cs = con.prepareCall(callSP)) {
                     for (ChiTietPhieuNhapRequest ct : req.getChiTietList()) {
-                        psCT.setString(1, req.getMaPN());
-                        psCT.setString(2, ct.getMaSP());
-                        psCT.setInt(3, ct.getSoLuongNhap());
-                        psCT.setDouble(4, ct.getDonGiaNhap());
-                        psCT.setDate(5, ct.getHanSuDung());
-                        psCT.addBatch();
+                        cs.setString(1, req.getMaPN());
+                        cs.setString(2, req.getMaNCC());
+                        cs.setString(3, "NV001");
+                        cs.setString(4, "K01");
+                        cs.setString(5, ct.getMaSP());
+                        cs.setInt(6, ct.getSoLuongNhap());
+                        cs.setDouble(7, ct.getDonGiaNhap());
+                        cs.setDate(8, ct.getHanSuDung());
+                        cs.addBatch();
                     }
-                    psCT.executeBatch();
+                    cs.executeBatch();
                 }
             }
 
@@ -105,10 +90,22 @@ public class PhieuNhapRepository {
             if (con != null) {
                 try { con.rollback(); } catch (SQLException ex) {}
             }
-            throw e;
+            int errCode = e.getErrorCode();
+            String userMsg = e.getMessage();
+            if (errCode == 2627 || errCode == 2601) {
+                userMsg = "Lỗi: Trùng lặp khóa chính (Mã phiếu nhập đã tồn tại).";
+            } else if (errCode == 547) {
+                userMsg = "Lỗi: Vi phạm ràng buộc khóa ngoại (Sản phẩm hoặc Nhà cung cấp không tồn tại).";
+            } else if (errCode >= 50000) {
+                userMsg = e.getMessage(); 
+            }
+            throw new SQLException(userMsg, e.getSQLState(), errCode);
         } finally {
             if (con != null) {
-                try { con.setAutoCommit(true); con.close(); } catch (SQLException ex) {}
+                try { 
+                    con.setAutoCommit(true); 
+                    con.close(); 
+                } catch (SQLException ex) {}
             }
         }
     }

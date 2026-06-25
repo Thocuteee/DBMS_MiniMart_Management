@@ -31,7 +31,7 @@ public class BanHangController {
         try {
             String username = authentication.getName();
             NhanVien nv = nhanVienRepository.findByUserName(username);
-            String maNV = nv != null ? nv.getMaNV() : "NV01"; // Fallback to NV01 to avoid FK error
+            String maNV = nv != null ? nv.getMaNV() : "NV001"; // Fallback to NV001 to avoid FK error
             
             hoaDonService.taoHoaDon(request, maNV);
             Map<String, String> response = new HashMap<>();
