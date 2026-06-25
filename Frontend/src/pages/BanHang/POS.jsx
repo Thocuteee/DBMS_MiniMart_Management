@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { ShoppingCart, Search, Trash2, UserPlus, CreditCard, ChevronRight } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const POS = () => {
   const [products, setProducts] = useState([]);
@@ -350,7 +352,7 @@ const POS = () => {
                       const val = Number(e.target.value);
                       const maxPoints = selectedCustomer ? (selectedCustomer.diemTichLuy || 0) : 0;
                       if (selectedCustomer && val > maxPoints) {
-                        alert(`Khách hàng chỉ có ${maxPoints} điểm!`);
+                        toast.warning(`Khách hàng chỉ có ${maxPoints} điểm!`);
                         setUsedPoints(maxPoints);
                       } else if (val > totalAmount) {
                         setUsedPoints(totalAmount);

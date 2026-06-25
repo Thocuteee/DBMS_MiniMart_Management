@@ -14,6 +14,8 @@ import POS from './pages/BanHang/POS';
 import Orders from './pages/BanHang/Orders';
 
 import MyOrders from './pages/MyOrders';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -33,6 +35,7 @@ const Placeholder = ({ title }) => (
 function App() {
   return (
     <Router>
+      <ToastContainer position="bottom-right" theme="colored" autoClose={3000} />
       <Routes>
         <Route path="/login" element={<Login />} />
         

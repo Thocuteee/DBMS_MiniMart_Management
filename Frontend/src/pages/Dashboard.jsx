@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import { 
   Package, Search, Filter, ShoppingBag, TrendingUp, Star, Award, 
   Users, AlertTriangle, FileText, Download, Clock, ShoppingCart 
@@ -32,7 +34,7 @@ const AdminDashboard = () => {
   if (loading) return <div className="p-5 text-center"><div className="spinner-border text-primary" role="status"></div></div>;
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: '#f8f9ff', minHeight: '100vh' }}>
+    <div className="container-fluid py-4 bg-body-tertiary" style={{ minHeight: '100vh' }}>
       
       {/* Top Header */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
@@ -42,7 +44,7 @@ const AdminDashboard = () => {
         </div>
         <div className="d-flex gap-2 align-items-center">
           <div className="input-group" style={{ width: '250px' }}>
-            <span className="input-group-text bg-white text-muted border-end-0"><Search size={16} /></span>
+            <span className="input-group-text bg-body text-muted border-end-0"><Search size={16} /></span>
             <input type="text" placeholder="Tìm kiếm..." className="form-control border-start-0 ps-0" />
           </div>
           <button className="btn btn-primary d-flex align-items-center gap-2 shadow-sm">
@@ -181,12 +183,12 @@ const AdminDashboard = () => {
                       {tx.customer.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <h6 className="fw-bold mb-0 text-dark small">{tx.customer}</h6>
+                      <h6 className="fw-bold mb-0 text-body-emphasis small">{tx.customer}</h6>
                       <small className="text-muted" style={{ fontSize: '11px' }}>{new Date(tx.date).toLocaleDateString('vi-VN')}</small>
                     </div>
                   </div>
                   <div className="text-end">
-                    <div className="fw-bold text-dark small">${tx.amount.toLocaleString('en-US')}</div>
+                    <div className="fw-bold text-body-emphasis small">${tx.amount.toLocaleString('en-US')}</div>
                     <span className="badge bg-success bg-opacity-10 text-success text-uppercase" style={{ fontSize: '10px' }}>Thành công</span>
                   </div>
                 </div>
@@ -210,6 +212,7 @@ const CustomerDashboard = () => {
   const [products, setProducts] = useState([]);
   const [customerData, setCustomerData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -240,18 +243,63 @@ const CustomerDashboard = () => {
   const pts = customerData?.rewardPoints || 0;
   const progressToNext = (pts % 1000) / 1000 * 100;
 
+  const handleBuyNow = async (product) => {
+    try {
+      const token = localStorage.getItem('token');
+      const username = localStorage.getItem('username'); // phone
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      // Get maKH
+      let maKH = '';
+      try {
+        const profileRes = await axios.get(`http://localhost:8080/api/v1/profile`, { headers });
+        maKH = profileRes.data.maKH;
+        if (!maKH) throw new Error("No maKH found");
+      } catch (err) {
+        console.error("Không tìm thấy mã KH", err);
+        toast.error('Vui lòng cập nhật thông tin hồ sơ trước khi mua hàng!');
+        return;
+      }
+      
+      // Create order
+      const maHD = 'HD' + Date.now().toString().slice(-6);
+      const payload = {
+        maHD,
+        maKH,
+        giamGia: 0,
+        chiTietList: [
+          {
+            maSP: product.maSP,
+            soLuong: 1,
+            donGiaBan: product.giaBan
+          }
+        ]
+      };
+      
+      await axios.post('http://localhost:8080/api/v1/ban-hang/thanh-toan', payload, { headers });
+      toast.success('Bạn thêm đơn hàng thành công!');
+      navigate('/my-orders');
+    } catch (err) {
+      console.error(err);
+      toast.error('Có lỗi xảy ra khi xử lý đơn hàng!');
+    }
+  };
+
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: '#f8f9ff', minHeight: '100vh' }}>
+    <div className="container-fluid py-4 bg-body-tertiary" style={{ minHeight: '100vh' }}>
       
       {/* Hero Section */}
       <div className="card shadow-sm border-0 mb-4 p-4">
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
           <div>
-            <h3 className="fw-bold text-dark mb-1">Xin chào, {customerData?.fullName || 'Khách hàng'}! 👋</h3>
+            <h3 className="fw-bold text-body-emphasis mb-1">Xin chào, {customerData?.fullName || 'Khách hàng'}! 👋</h3>
             <p className="text-muted mb-0">Chào mừng trở lại. Cùng khám phá các sản phẩm nổi bật hôm nay nhé.</p>
           </div>
-          <button className="btn btn-primary d-flex align-items-center gap-2 shadow-sm px-4 py-2">
-            <ShoppingCart size={18} /> Đặt lại đơn gần nhất
+          <button 
+            className="btn btn-primary d-flex align-items-center gap-2 shadow-sm px-4 py-2"
+            onClick={() => navigate('/my-orders')}
+          >
+            <ShoppingCart size={18} /> Xem đơn hàng của tôi
           </button>
         </div>
       </div>
@@ -266,7 +314,7 @@ const CustomerDashboard = () => {
               <Award className="text-warning" />
             </div>
             <div>
-              <h2 className="fw-bold mb-1 text-dark">{pts.toLocaleString('en-US')} <span className="fs-6 text-muted fw-normal">điểm</span></h2>
+              <h2 className="fw-bold mb-1 text-body-emphasis">{pts.toLocaleString('en-US')} <span className="fs-6 text-muted fw-normal">điểm</span></h2>
               <div className="mt-4">
                 <div className="d-flex justify-content-between text-muted small fw-medium mb-2">
                   <span>Hạng {customerData?.membershipTier || 'Đồng'}</span>
@@ -302,14 +350,14 @@ const CustomerDashboard = () => {
             <div className="d-flex flex-column gap-3">
               {products.slice(0, 3).map((p, i) => (
                 <div key={i} className="d-flex align-items-center gap-3">
-                  <div className="bg-light border rounded d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '40px', height: '40px' }}>
+                  <div className="bg-body-secondary border rounded d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '40px', height: '40px' }}>
                     {p.hinhAnh ? (
                       <img src={p.hinhAnh} alt={p.tenSP} style={{ maxWidth: '30px', maxHeight: '30px', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
                     ) : null}
                     <Package className="text-muted" size={20} style={{ display: p.hinhAnh ? 'none' : 'block' }} />
                   </div>
                   <div className="flex-grow-1 text-truncate">
-                    <p className="fw-semibold text-dark small mb-0 text-truncate">{p.tenSP}</p>
+                    <p className="fw-semibold text-body-emphasis small mb-0 text-truncate">{p.tenSP}</p>
                     <p className="text-primary fw-bold mb-0" style={{ fontSize: '12px' }}>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.giaBan)}</p>
                   </div>
                 </div>
@@ -322,7 +370,7 @@ const CustomerDashboard = () => {
       {/* Recommended for You */}
       <div className="mb-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h5 className="fw-bold text-dark mb-0">Gợi ý cho bạn</h5>
+          <h5 className="fw-bold text-body-emphasis mb-0">Gợi ý cho bạn</h5>
           <button className="btn btn-link text-decoration-none fw-semibold">Xem tất cả</button>
         </div>
         
@@ -345,7 +393,7 @@ const CustomerDashboard = () => {
             {recommendedProducts.map(product => (
               <div key={product.maSP} className="col-6 col-md-4 col-lg-2">
                 <div className="card shadow-sm border-0 h-100 transition hover-shadow" style={{ cursor: 'pointer' }}>
-                  <div className="bg-light d-flex align-items-center justify-content-center border-bottom overflow-hidden" style={{ height: '140px' }}>
+                  <div className="bg-body-secondary d-flex align-items-center justify-content-center border-bottom overflow-hidden" style={{ height: '140px' }}>
                     {product.hinhAnh ? (
                       <img 
                         src={product.hinhAnh} 
@@ -359,16 +407,23 @@ const CustomerDashboard = () => {
                   </div>
                   <div className="card-body p-3 d-flex flex-column">
                     <div className="flex-grow-1">
-                      <h6 className="fw-semibold text-dark mb-1 text-truncate" title={product.tenSP}>
+                      <h6 className="fw-semibold text-body-emphasis mb-1 text-truncate" title={product.tenSP}>
                         {product.tenSP}
                       </h6>
                       <p className="text-muted small mb-2">{product.donVi}</p>
                     </div>
                     <div className="d-flex align-items-center justify-content-between pt-2 border-top">
-                      <span className="fw-bold text-dark" style={{ fontSize: '13px' }}>
+                      <span className="fw-bold text-body-emphasis" style={{ fontSize: '13px' }}>
                         {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.giaBan)}
                       </span>
-                      <button className="btn btn-sm btn-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style={{ width: '28px', height: '28px', padding: 0 }}>
+                      <button 
+                        className="btn btn-sm btn-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
+                        style={{ width: '28px', height: '28px', padding: 0 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBuyNow(product);
+                        }}
+                      >
                         <ShoppingCart size={14} />
                       </button>
                     </div>
@@ -395,14 +450,14 @@ const EmployeeDashboard = () => (
       </div>
     </div>
 
-    <h4 className="fw-bold text-dark mb-4">Truy cập nhanh</h4>
+    <h4 className="fw-bold text-body-emphasis mb-4">Truy cập nhanh</h4>
     <div className="row g-4">
       <div className="col-md-4">
         <div className="card shadow-sm border-0 h-100 p-4 text-center hover-shadow transition" style={{ cursor: 'pointer' }}>
           <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '60px', height: '60px' }}>
             <ShoppingCart size={28} />
           </div>
-          <h5 className="fw-bold text-dark mb-2">Bán hàng (POS)</h5>
+          <h5 className="fw-bold text-body-emphasis mb-2">Bán hàng (POS)</h5>
           <p className="text-muted small mb-0">Xử lý thanh toán cho khách hàng</p>
         </div>
       </div>
@@ -412,7 +467,7 @@ const EmployeeDashboard = () => (
           <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '60px', height: '60px' }}>
             <Package size={28} />
           </div>
-          <h5 className="fw-bold text-dark mb-2">Kiểm tra Tồn kho</h5>
+          <h5 className="fw-bold text-body-emphasis mb-2">Kiểm tra Tồn kho</h5>
           <p className="text-muted small mb-0">Tra cứu số lượng hàng hóa</p>
         </div>
       </div>
@@ -422,7 +477,7 @@ const EmployeeDashboard = () => (
           <div className="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '60px', height: '60px' }}>
             <FileText size={28} />
           </div>
-          <h5 className="fw-bold text-dark mb-2">Nhập Hàng hóa</h5>
+          <h5 className="fw-bold text-body-emphasis mb-2">Nhập Hàng hóa</h5>
           <p className="text-muted small mb-0">Ghi nhận hàng mới nhập về kho</p>
         </div>
       </div>

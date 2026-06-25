@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Imports = () => {
   const [imports, setImports] = useState([]);
@@ -77,13 +78,13 @@ const Imports = () => {
       setShowDetailModal(true);
     } catch (err) {
       console.error(err);
-      alert('Lỗi tải chi tiết phiếu nhập');
+      toast.error('Lỗi tải chi tiết phiếu nhập');
     }
   };
 
   const addProductToImport = () => {
     if (!currentSP.maSP || currentSP.soLuongNhap <= 0 || currentSP.donGiaNhap < 0 || !currentSP.hanSuDung) {
-      alert("Vui lòng điền đầy đủ và hợp lệ thông tin sản phẩm nhập (bao gồm Hạn sử dụng)");
+      toast.warning("Vui lòng điền đầy đủ và hợp lệ thông tin sản phẩm nhập (bao gồm Hạn sử dụng)");
       return;
     }
     setFormData({
@@ -103,11 +104,11 @@ const Imports = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.maNCC) {
-      alert("Vui lòng chọn nhà cung cấp");
+      toast.warning("Vui lòng chọn nhà cung cấp");
       return;
     }
     if (formData.chiTietList.length === 0) {
-      alert("Phiếu nhập phải có ít nhất 1 sản phẩm");
+      toast.warning("Phiếu nhập phải có ít nhất 1 sản phẩm");
       return;
     }
 
@@ -118,7 +119,7 @@ const Imports = () => {
       });
       fetchImports();
       handleClose();
-      alert("Tạo phiếu nhập thành công! Tồn kho đã được tự động cập nhật.");
+      toast.success("Tạo phiếu nhập thành công! Tồn kho đã được tự động cập nhật.");
     } catch (err) {
       console.error(err);
       setError('Lỗi khi tạo phiếu nhập.');

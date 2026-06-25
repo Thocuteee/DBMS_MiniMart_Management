@@ -78,8 +78,10 @@ const Header = () => {
     setIsDarkMode(newDarkMode);
     if (newDarkMode) {
       document.body.setAttribute('data-theme', 'dark');
+      document.documentElement.setAttribute('data-bs-theme', 'dark');
     } else {
       document.body.removeAttribute('data-theme');
+      document.documentElement.setAttribute('data-bs-theme', 'light');
     }
   };
 
@@ -101,27 +103,27 @@ const Header = () => {
   };
 
   return (
-    <header className="header bg-white border-bottom shadow-sm">
+    <header className="header bg-body border-bottom shadow-sm">
       <div className="header-left">
         <div className="input-group" style={{ width: '300px' }}>
-          <span className="input-group-text bg-light border-end-0"><Search size={18} className="text-muted" /></span>
-          <input type="text" placeholder="Tìm kiếm..." className="form-control border-start-0 bg-light" />
+          <span className="input-group-text bg-body-secondary border-end-0"><Search size={18} className="text-muted" /></span>
+          <input type="text" placeholder="Tìm kiếm..." className="form-control border-start-0 bg-body-secondary" />
         </div>
       </div>
 
       <div className="header-right d-flex align-items-center gap-2">
-        <button className="btn btn-light rounded-circle p-2 d-none d-sm-flex align-items-center justify-content-center text-muted hover-shadow" style={{width:'40px', height:'40px'}}>
+        <button className="btn bg-body-secondary border-0 rounded-circle p-2 d-none d-sm-flex align-items-center justify-content-center text-muted hover-shadow" style={{width:'40px', height:'40px'}}>
           <Globe size={18} />
         </button>
-        <button className="btn btn-light rounded-circle p-2 d-none d-sm-flex align-items-center justify-content-center text-muted hover-shadow" onClick={toggleFullScreen} style={{width:'40px', height:'40px'}}>
+        <button className="btn bg-body-secondary border-0 rounded-circle p-2 d-none d-sm-flex align-items-center justify-content-center text-muted hover-shadow" onClick={toggleFullScreen} style={{width:'40px', height:'40px'}}>
           <Maximize size={18} />
         </button>
-        <button className="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center text-muted hover-shadow" onClick={toggleDarkMode} style={{width:'40px', height:'40px'}}>
+        <button className="btn bg-body-secondary border-0 rounded-circle p-2 d-flex align-items-center justify-content-center text-muted hover-shadow" onClick={toggleDarkMode} style={{width:'40px', height:'40px'}}>
           {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
         </button>
         <div className="position-relative" ref={notiRef}>
           <button 
-            className="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center text-muted position-relative hover-shadow" 
+            className="btn bg-body-secondary border-0 rounded-circle p-2 d-flex align-items-center justify-content-center text-muted position-relative hover-shadow" 
             style={{width:'40px', height:'40px'}}
             onClick={() => setShowNotiMenu(!showNotiMenu)}
           >
@@ -133,44 +135,44 @@ const Header = () => {
           
           {showNotiMenu && (
             <div className="dropdown-menu show shadow-lg border-0 position-absolute end-0 mt-2 p-0" style={{ minWidth: '320px', borderRadius: '12px', animation: 'fadeIn 0.2s ease', zIndex: 1000 }}>
-              <div className="d-flex justify-content-between align-items-center px-4 py-3 border-bottom bg-light bg-opacity-50" style={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
-                <h6 className="mb-0 fw-bold text-dark">Thông báo</h6>
+              <div className="d-flex justify-content-between align-items-center px-4 py-3 border-bottom bg-body-secondary bg-opacity-50" style={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
+                <h6 className="mb-0 fw-bold text-body-emphasis">Thông báo</h6>
                 <span className="badge bg-primary rounded-pill">2 mới</span>
               </div>
               
               <div className="list-group list-group-flush" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                 {profile.roleDisplay === 'Khách hàng' ? (
                   <>
-                    <button className="list-group-item list-group-item-action p-3 border-bottom hover-bg-light">
+                    <button className="list-group-item list-group-item-action p-3 border-bottom hover-bg-body-secondary">
                       <div className="d-flex w-100 justify-content-between align-items-start mb-1">
                         <strong className="text-primary small">🎉 Ưu đãi mới</strong>
                         <small className="text-muted" style={{fontSize: '11px'}}>Vừa xong</small>
                       </div>
-                      <p className="mb-0 text-dark small">Tặng bạn mã giảm giá 15% cho đơn hàng tiếp theo. Đừng bỏ lỡ!</p>
+                      <p className="mb-0 text-body-emphasis small">Tặng bạn mã giảm giá 15% cho đơn hàng tiếp theo. Đừng bỏ lỡ!</p>
                     </button>
-                    <button className="list-group-item list-group-item-action p-3 hover-bg-light">
+                    <button className="list-group-item list-group-item-action p-3 hover-bg-body-secondary">
                       <div className="d-flex w-100 justify-content-between align-items-start mb-1">
                         <strong className="text-success small">📦 Đơn hàng thành công</strong>
                         <small className="text-muted" style={{fontSize: '11px'}}>2 giờ trước</small>
                       </div>
-                      <p className="mb-0 text-dark small">Đơn hàng của bạn đã được giao thành công. Cảm ơn bạn!</p>
+                      <p className="mb-0 text-body-emphasis small">Đơn hàng của bạn đã được giao thành công. Cảm ơn bạn!</p>
                     </button>
                   </>
                 ) : (
                   <>
-                    <button className="list-group-item list-group-item-action p-3 border-bottom hover-bg-light">
+                    <button className="list-group-item list-group-item-action p-3 border-bottom hover-bg-body-secondary">
                       <div className="d-flex w-100 justify-content-between align-items-start mb-1">
                         <strong className="text-danger small">⚠️ Cảnh báo tồn kho</strong>
                         <small className="text-muted" style={{fontSize: '11px'}}>10 phút trước</small>
                       </div>
-                      <p className="mb-0 text-dark small">Sản phẩm sắp hết hàng trong kho. Vui lòng kiểm tra.</p>
+                      <p className="mb-0 text-body-emphasis small">Sản phẩm sắp hết hàng trong kho. Vui lòng kiểm tra.</p>
                     </button>
-                    <button className="list-group-item list-group-item-action p-3 hover-bg-light">
+                    <button className="list-group-item list-group-item-action p-3 hover-bg-body-secondary">
                       <div className="d-flex w-100 justify-content-between align-items-start mb-1">
                         <strong className="text-info small">📝 Báo cáo ngày</strong>
                         <small className="text-muted" style={{fontSize: '11px'}}>Hôm qua</small>
                       </div>
-                      <p className="mb-0 text-dark small">Báo cáo doanh thu cuối ngày đã được tổng hợp xong.</p>
+                      <p className="mb-0 text-body-emphasis small">Báo cáo doanh thu cuối ngày đã được tổng hợp xong.</p>
                     </button>
                   </>
                 )}
@@ -187,7 +189,7 @@ const Header = () => {
         
         <div className="position-relative ms-3" ref={menuRef}>
           <div 
-            className="d-flex align-items-center gap-2 p-1 rounded-pill hover-bg-light transition" 
+            className="d-flex align-items-center gap-2 p-1 rounded-pill hover-bg-body-secondary transition" 
             onClick={() => setShowUserMenu(!showUserMenu)} 
             style={{cursor: 'pointer', border: '1px solid transparent'}}
             onMouseEnter={e => e.currentTarget.style.borderColor = '#e9ebec'}
@@ -200,7 +202,7 @@ const Header = () => {
               style={{ width: '38px', height: '38px', objectFit: 'cover' }} 
             />
             <div className="d-none d-md-flex flex-column lh-1 px-1">
-              <span className="fw-bold text-dark mb-1" style={{ fontSize: '14px' }}>{profile.fullName || profile.username}</span>
+              <span className="fw-bold text-body-emphasis mb-1" style={{ fontSize: '14px' }}>{profile.fullName || profile.username}</span>
               <span className="text-muted" style={{ fontSize: '11px', fontWeight: '500' }}>{profile.roleDisplay}</span>
             </div>
             <ChevronDown size={14} className="text-muted me-2 d-none d-md-block" />
@@ -208,22 +210,22 @@ const Header = () => {
 
           {showUserMenu && (
             <div className="dropdown-menu show shadow-lg border-0 position-absolute end-0 mt-2 py-2" style={{ minWidth: '240px', borderRadius: '12px', animation: 'fadeIn 0.2s ease' }}>
-              <div className="px-4 py-3 border-bottom mb-2 bg-light bg-opacity-50">
+              <div className="px-4 py-3 border-bottom mb-2 bg-body-secondary bg-opacity-50">
                 <p className="mb-0 text-muted small">Xin chào,</p>
-                <p className="mb-0 fw-bold fs-6 text-dark text-truncate">{profile.fullName || profile.username}</p>
+                <p className="mb-0 fw-bold fs-6 text-body-emphasis text-truncate">{profile.fullName || profile.username}</p>
                 {profile.phone && (
                   <p className="mb-0 mt-1 small text-muted d-flex align-items-center gap-1">
                     <Phone size={12} /> {profile.phone}
                   </p>
                 )}
                 {profile.roleDisplay === 'Khách hàng' && (
-                  <span className="badge bg-warning text-dark mt-2 d-flex align-items-center gap-1 w-auto d-inline-block">
+                  <span className="badge bg-warning text-body-emphasis mt-2 d-flex align-items-center gap-1 w-auto d-inline-block">
                     <Award size={12} /> {profile.points} điểm
                   </span>
                 )}
               </div>
               <button 
-                className="dropdown-item d-flex align-items-center gap-3 py-2 px-4 text-secondary hover-bg-light"
+                className="dropdown-item d-flex align-items-center gap-3 py-2 px-4 text-secondary hover-bg-body-secondary"
                 onClick={() => {
                   navigate('/profile');
                   setShowUserMenu(false);

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 import { Search, Plus, Edit2, Trash2, X, RefreshCw } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:8080/api/v1/khach-hang';
@@ -110,11 +112,11 @@ const KhachHangTab = () => {
         throw new Error(errText || 'Lỗi khi lưu dữ liệu');
       }
       
-      alert(editingCustomer ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
+      toast.success(editingCustomer ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
       handleCloseModal();
       fetchCustomers(); // Refresh the list
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      toast.error('Lỗi: ' + err.message);
     }
   };
 
@@ -135,10 +137,10 @@ const KhachHangTab = () => {
         throw new Error(errText || 'Lỗi khi xóa dữ liệu');
       }
       
-      alert('Xóa khách hàng thành công!');
+      toast.success('Xóa khách hàng thành công!');
       fetchCustomers();
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      toast.error('Lỗi: ' + err.message);
     }
   };
 

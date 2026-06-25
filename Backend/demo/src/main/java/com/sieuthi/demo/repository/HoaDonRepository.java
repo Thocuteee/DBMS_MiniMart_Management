@@ -24,6 +24,7 @@ public class HoaDonRepository {
             while (rs.next()) {
                 HoaDonResponse res = new HoaDonResponse();
                 res.setMaHD(rs.getString("MaHD"));
+                res.setMaKH(rs.getString("MaKH"));
                 res.setNgayLap(rs.getTimestamp("NgayLap").toLocalDateTime());
                 res.setTenNhanVien(rs.getString("HoTen"));
                 res.setTenKhachHang(rs.getString("UserName"));
@@ -70,6 +71,7 @@ public class HoaDonRepository {
         Connection con = null;
         try {
             con = DatabaseConnection.getConnection();
+            con.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             con.setAutoCommit(false); 
 
             double tongTien = 0;
@@ -78,6 +80,7 @@ public class HoaDonRepository {
             }
             double thanhTien = tongTien - req.getGiamGia();
 
+            // Insert HoaDon
             try (PreparedStatement psHD = con.prepareStatement(insertHD)) {
                 psHD.setString(1, req.getMaHD());
                 psHD.setString(2, maNV);
@@ -92,6 +95,7 @@ public class HoaDonRepository {
                 psHD.executeUpdate();
             }
 
+            // Insert ChiTietHoaDon
             try (PreparedStatement psCT = con.prepareStatement(insertCT)) {
                 for (ChiTietHoaDonRequest ct : req.getChiTietList()) {
                     psCT.setString(1, req.getMaHD());
@@ -104,6 +108,7 @@ public class HoaDonRepository {
                 psCT.executeBatch();
             }
 
+            // Update TonKho
             try (PreparedStatement psTK = con.prepareStatement(updateTonKho)) {
                 for (ChiTietHoaDonRequest ct : req.getChiTietList()) {
                     psTK.setInt(1, ct.getSoLuong());
@@ -118,10 +123,22 @@ public class HoaDonRepository {
             if (con != null) {
                 try { con.rollback(); } catch (SQLException ex) {}
             }
-            throw e; 
+            int errCode = e.getErrorCode();
+            String userMsg = e.getMessage();
+            if (errCode == 2627 || errCode == 2601) {
+                userMsg = "Lỗi: Trùng lặp khóa chính (Mã hóa đơn đã tồn tại).";
+            } else if (errCode == 547) {
+                userMsg = "Lỗi: Vi phạm ràng buộc khóa ngoại (Sản phẩm hoặc Khách hàng không tồn tại).";
+            } else if (errCode >= 50000) {
+                userMsg = e.getMessage();
+            }
+            throw new SQLException(userMsg, e.getSQLState(), errCode); 
         } finally {
             if (con != null) {
-                try { con.close(); } catch (SQLException ex) {}
+                try { 
+                    con.setAutoCommit(true); 
+                    con.close(); 
+                } catch (SQLException ex) {}
             }
         }
     }
