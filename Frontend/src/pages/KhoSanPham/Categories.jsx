@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import './KhoSanPham.css';
 
@@ -41,17 +42,17 @@ const Categories = () => {
         await axios.put('http://localhost:8080/api/v1/danh-muc/loai-san-pham', formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        alert('Cập nhật danh mục thành công!');
+        toast.success('Cập nhật danh mục thành công!');
       } else {
         await axios.post('http://localhost:8080/api/v1/danh-muc/loai-san-pham', formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        alert('Thêm danh mục thành công!');
+        toast.success('Thêm danh mục thành công!');
       }
       setShowModal(false);
       fetchCategories();
     } catch (err) {
-      alert('Lỗi: ' + err.response?.data);
+      toast.error('Lỗi: ' + err.response?.data);
     }
   };
 
@@ -75,7 +76,7 @@ const Categories = () => {
       });
       fetchCategories();
     } catch (err) {
-      alert('Lỗi xóa danh mục: ' + (err.response?.data || err.message));
+      toast.error('Lỗi xóa danh mục: ' + (err.response?.data || err.message));
     }
   };
 

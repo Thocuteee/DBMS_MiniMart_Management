@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 import { Search, Plus, Edit2, Trash2, X, RefreshCw } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:8080/api/v1/nhan-vien';
@@ -107,11 +109,11 @@ const NhanVienTab = () => {
         throw new Error(errText || 'Lỗi khi lưu dữ liệu');
       }
       
-      alert(editingStaff ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
+      toast.success(editingStaff ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
       handleCloseModal();
       fetchStaff(); // Refresh the list
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      toast.error('Lỗi: ' + err.message);
     }
   };
 
@@ -132,10 +134,10 @@ const NhanVienTab = () => {
         throw new Error(errText || 'Lỗi khi xóa nhân viên');
       }
       
-      alert('Xóa nhân viên thành công!');
+      toast.success('Xóa nhân viên thành công!');
       fetchStaff();
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      toast.error('Lỗi: ' + err.message);
     }
   };
 

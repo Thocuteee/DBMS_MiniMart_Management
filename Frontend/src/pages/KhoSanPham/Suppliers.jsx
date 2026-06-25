@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
+import { Edit, Trash2, Plus, Users } from 'lucide-react';
 
 const Suppliers = () => {
   const [suppliers, setSuppliers] = useState([]);
@@ -79,7 +81,7 @@ const Suppliers = () => {
         fetchSuppliers();
       } catch (err) {
         console.error(err);
-        alert('Lỗi xóa nhà cung cấp. Đã có phiếu nhập liên kết?');
+        toast.error('Lỗi xóa nhà cung cấp. Đã có phiếu nhập liên kết?');
       }
     }
   };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Plus, Package } from 'lucide-react';
+import { toast } from 'react-toastify';
 import './KhoSanPham.css';
 
 const Products = () => {
@@ -55,16 +56,16 @@ const Products = () => {
       
       if (isEditing) {
         await axios.put(`http://localhost:8080/api/v1/san-pham`, formData, { headers });
-        alert('Cập nhật sản phẩm thành công!');
+        toast.success('Cập nhật sản phẩm thành công!');
       } else {
         await axios.post('http://localhost:8080/api/v1/san-pham', formData, { headers });
-        alert('Thêm sản phẩm thành công!');
+        toast.success('Thêm sản phẩm thành công!');
       }
       
       setShowModal(false);
       fetchData();
     } catch (err) {
-      alert('Lỗi: ' + err.response?.data);
+      toast.error('Lỗi: ' + err.response?.data);
     }
   };
 
@@ -81,10 +82,10 @@ const Products = () => {
       await axios.delete(`http://localhost:8080/api/v1/san-pham/${maSP}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Xóa sản phẩm thành công!');
+      toast.success('Xóa sản phẩm thành công!');
       fetchData();
     } catch (err) {
-      alert('Lỗi xóa sản phẩm: ' + err.response?.data);
+      toast.error('Lỗi xóa sản phẩm: ' + err.response?.data);
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import { 
   Package, Search, Filter, ShoppingBag, TrendingUp, Star, Award, 
   Users, AlertTriangle, FileText, Download, Clock, ShoppingCart 
@@ -256,7 +257,7 @@ const CustomerDashboard = () => {
         if (!maKH) throw new Error("No maKH found");
       } catch (err) {
         console.error("Không tìm thấy mã KH", err);
-        alert('Vui lòng cập nhật thông tin hồ sơ trước khi mua hàng!');
+        toast.error('Vui lòng cập nhật thông tin hồ sơ trước khi mua hàng!');
         return;
       }
       
@@ -276,11 +277,11 @@ const CustomerDashboard = () => {
       };
       
       await axios.post('http://localhost:8080/api/v1/ban-hang/thanh-toan', payload, { headers });
-      alert('Bạn thêm đơn hàng thành công!');
+      toast.success('Bạn thêm đơn hàng thành công!');
       navigate('/my-orders');
     } catch (err) {
       console.error(err);
-      alert('Có lỗi xảy ra khi xử lý đơn hàng!');
+      toast.error('Có lỗi xảy ra khi xử lý đơn hàng!');
     }
   };
 
