@@ -1,10 +1,8 @@
-﻿\-- =================================================================================
+\-- =================================================================================
 -- HỆ THỐNG QUẢN LÝ SIÊU THỊ MINI - PHÂN HỆ ĐIỀU CHUYỂN & TIÊU HỦY HÀNG HỎNG
 -- =================================================================================
 
--- 1. TẠO CƠ SỞ DỮ LIỆU THỬ NGHIỆM
-CREATE DATABASE QuanLySieuThiMini;
-GO
+-- 1. SỬ DỤNG CƠ SỞ DỮ LIỆU ĐÃ CÓ
 USE QuanLySieuThiMini;
 GO
 
@@ -12,60 +10,16 @@ GO
 -- 2. ĐỊNH NGHĨA CẤU TRÚC BẢNG (SCHEMA)
 -- =================================================================================
 
--- Bảng Danh mục Sản phẩm
-CREATE TABLE SanPham (
-    MaSanPham VARCHAR(50) PRIMARY KEY,
-    TenSanPham NVARCHAR(100) NOT NULL,
-    GiaVon DECIMAL(18, 2) NOT NULL CHECK (GiaVon >= 0)
-);
-
--- Bảng Quản lý Kho (K01: Kho tổng, K02: Kho quầy của Thọ)
-CREATE TABLE TonKho (
-    MaKho VARCHAR(10) NOT NULL,
-    MaSanPham VARCHAR(50) NOT NULL,
-    SoLuong INT NOT NULL CHECK (SoLuong >= 0),
-    PRIMARY KEY (MaKho, MaSanPham),
-    FOREIGN KEY (MaSanPham) REFERENCES SanPham(MaSanPham)
-);
-
--- Bảng Tiêu đề Phiếu Hủy Hàng
-CREATE TABLE PhieuHuy (
-    MaPhieuHuy VARCHAR(50) PRIMARY KEY,
-    NgayHuy DATETIME DEFAULT GETDATE(),
-    TongTienLo DECIMAL(18, 2) DEFAULT 0 CHECK (TongTienLo >= 0),
-    GhiChu NVARCHAR(255)
-);
-
--- Bảng Chi Tiết Phiếu Hủy Hàng
-CREATE TABLE ChiTietPhieuHuy (
-    MaPhieuHuy VARCHAR(50) NOT NULL,
-    MaSanPham VARCHAR(50) NOT NULL,
-    SoLuongHuy INT NOT NULL,
-    TienLo DECIMAL(18, 2) NOT NULL CHECK (TienLo >= 0),
-    PRIMARY KEY (MaPhieuHuy, MaSanPham),
-    FOREIGN KEY (MaPhieuHuy) REFERENCES PhieuHuy(MaPhieuHuy),
-    FOREIGN KEY (MaSanPham) REFERENCES SanPham(MaSanPham)
-);
+-- Bảng SanPham, TonKho đã được tạo trong 01_Init_Database_Full.sql
+-- Bảng PhieuHuy, ChiTietPhieuHuy đã được tạo trong 01_Init_Database_Full.sql
+-- Script này chỉ tạo Function, Trigger, Procedure, View cho phân hệ Điều chuyển & Hủy hàng.
 GO
 
 -- =================================================================================
--- 3. CHÈN DỮ LIỆU MẪU ĐỂ KIỂM THỬ (TEST DATA)
+-- 3. DỮ LIỆU MẪU (đã được nạp sẵn trong 01_Init_Database_Full.sql)
 -- =================================================================================
-INSERT INTO SanPham (MaSanPham, TenSanPham, GiaVon) VALUES 
-('SP001', N'Sữa tươi Tiệt Trùng Vinamilk 1L', 28000),
-('SP002', N'Bánh Quy Cosy Kinh Đô', 45000),
-('SP003', N'Mì tôm Hảo Hảo chua cay', 3800);
-
--- Nạp tồn kho ban đầu cho Kho Tổng K01
-INSERT INTO TonKho (MaKho, MaSanPham, SoLuong) VALUES 
-('K01', 'SP001', 100),
-('K01', 'SP002', 50),
-('K01', 'SP003', 500);
-
--- Kho quầy K02 ban đầu chỉ có một ít hàng
-INSERT INTO TonKho (MaKho, MaSanPham, SoLuong) VALUES 
-('K02', 'SP001', 5),
-('K02', 'SP002', 2);
+-- Bảng SanPham, TonKho đã có dữ liệu từ file Master.
+-- Script này không INSERT thêm để tránh trùng lặp.
 GO
 
 -- =================================================================================
@@ -74,17 +28,17 @@ GO
 
 -- 📌 [FUNCTION]: Tính toán số tiền lỗ dựa trên giá vốn sản phẩm
 CREATE FUNCTION fn_TinhTienLoHuyHang (
-    @MaSanPham VARCHAR(50),
+    @MaSP VARCHAR(10),
     @SoLuongHuy INT
 )
 RETURNS DECIMAL(18, 2)
 AS
 BEGIN
-    DECLARE @GiaVon DECIMAL(18, 2) = 0;
+    DECLARE @GiaBan DECIMAL(18, 2) = 0;
     DECLARE @TongTienLo DECIMAL(18, 2) = 0;
 
-    SELECT @GiaVon = ISNULL(GiaVon, 0) FROM SanPham WHERE MaSanPham = @MaSanPham;
-    SET @TongTienLo = @GiaVon * @SoLuongHuy;
+    SELECT @GiaBan = ISNULL(GiaBan, 0) FROM SanPham WHERE MaSP = @MaSP;
+    SET @TongTienLo = @GiaBan * @SoLuongHuy;
     
     RETURN @TongTienLo;
 END;
@@ -121,7 +75,7 @@ GO
 -- LICH SU: 2026-06-18 - Sua deadlock + linh hoat hoa kho nguon/dich
 -- ============================================================================
 CREATE PROCEDURE sp_DieuChuyenKhoNoiBo
-    @MaSanPham VARCHAR(50),
+    @MaSP VARCHAR(10),
     @SoLuongChuyen INT,
     @MaKhoNguon VARCHAR(10) = 'K01',    -- Mac dinh: Kho tong
     @MaKhoDich  VARCHAR(10) = 'K02'     -- Mac dinh: Quay POS
@@ -166,9 +120,9 @@ BEGIN
             -- Ma kho nguon NHO hon -> Xu ly kho NGUON truoc (tru), kho DICH sau (cong)
 
             -- 1a. Kiem tra & khoa dong kho NGUON (nho hon -> lock truoc)
-            SELECT @TonNguon = SoLuong 
+            SELECT @TonNguon = SoLuongTonKho 
             FROM TonKho WITH (XLOCK, ROWLOCK)
-            WHERE MaKho = @MaKhoNguon AND MaSanPham = @MaSanPham;
+            WHERE MaKho = @MaKhoNguon AND MaSP = @MaSP;
 
             IF @TonNguon IS NULL OR @TonNguon < @SoLuongChuyen
             BEGIN
@@ -177,20 +131,20 @@ BEGIN
 
             -- 2a. Tru kho nguon
             UPDATE TonKho 
-            SET SoLuong = SoLuong - @SoLuongChuyen 
-            WHERE MaKho = @MaKhoNguon AND MaSanPham = @MaSanPham;
+            SET SoLuongTonKho = SoLuongTonKho - @SoLuongChuyen 
+            WHERE MaKho = @MaKhoNguon AND MaSP = @MaSP;
 
             -- 3a. Cong kho dich (lon hon -> lock sau)
-            IF EXISTS (SELECT 1 FROM TonKho WHERE MaKho = @MaKhoDich AND MaSanPham = @MaSanPham)
+            IF EXISTS (SELECT 1 FROM TonKho WHERE MaKho = @MaKhoDich AND MaSP = @MaSP)
             BEGIN
                 UPDATE TonKho 
-                SET SoLuong = SoLuong + @SoLuongChuyen 
-                WHERE MaKho = @MaKhoDich AND MaSanPham = @MaSanPham;
+                SET SoLuongTonKho = SoLuongTonKho + @SoLuongChuyen 
+                WHERE MaKho = @MaKhoDich AND MaSP = @MaSP;
             END
             ELSE
             BEGIN
-                INSERT INTO TonKho (MaKho, MaSanPham, SoLuong) 
-                VALUES (@MaKhoDich, @MaSanPham, @SoLuongChuyen);
+                INSERT INTO TonKho (MaKho, MaSP, SoLuongTonKho) 
+                VALUES (@MaKhoDich, @MaSP, @SoLuongChuyen);
             END
         END
         ELSE
@@ -199,16 +153,16 @@ BEGIN
             -- VD: Dieu chuyen K02 -> K01 thi lock K01 truoc (K01 < K02)
 
             -- 1b. Lock kho DICH truoc (nho hon) - chi doc de giu lock
-            IF EXISTS (SELECT 1 FROM TonKho WITH (XLOCK, ROWLOCK) WHERE MaKho = @MaKhoDich AND MaSanPham = @MaSanPham)
+            IF EXISTS (SELECT 1 FROM TonKho WITH (XLOCK, ROWLOCK) WHERE MaKho = @MaKhoDich AND MaSP = @MaSP)
             BEGIN
                 -- Kho dich da co san pham -> se UPDATE phia duoi
                 DECLARE @dummy INT = 1;
             END
 
             -- 2b. Kiem tra & khoa kho NGUON (lon hon -> lock sau)
-            SELECT @TonNguon = SoLuong 
+            SELECT @TonNguon = SoLuongTonKho 
             FROM TonKho WITH (XLOCK, ROWLOCK)
-            WHERE MaKho = @MaKhoNguon AND MaSanPham = @MaSanPham;
+            WHERE MaKho = @MaKhoNguon AND MaSP = @MaSP;
 
             IF @TonNguon IS NULL OR @TonNguon < @SoLuongChuyen
             BEGIN
@@ -217,44 +171,43 @@ BEGIN
 
             -- 3b. Tru kho nguon
             UPDATE TonKho 
-            SET SoLuong = SoLuong - @SoLuongChuyen 
-            WHERE MaKho = @MaKhoNguon AND MaSanPham = @MaSanPham;
+            SET SoLuongTonKho = SoLuongTonKho - @SoLuongChuyen 
+            WHERE MaKho = @MaKhoNguon AND MaSP = @MaSP;
 
             -- 4b. Cong kho dich
-            IF EXISTS (SELECT 1 FROM TonKho WHERE MaKho = @MaKhoDich AND MaSanPham = @MaSanPham)
+            IF EXISTS (SELECT 1 FROM TonKho WHERE MaKho = @MaKhoDich AND MaSP = @MaSP)
             BEGIN
                 UPDATE TonKho 
-                SET SoLuong = SoLuong + @SoLuongChuyen 
-                WHERE MaKho = @MaKhoDich AND MaSanPham = @MaSanPham;
+                SET SoLuongTonKho = SoLuongTonKho + @SoLuongChuyen 
+                WHERE MaKho = @MaKhoDich AND MaSP = @MaSP;
             END
             ELSE
             BEGIN
-                INSERT INTO TonKho (MaKho, MaSanPham, SoLuong) 
-                VALUES (@MaKhoDich, @MaSanPham, @SoLuongChuyen);
+                INSERT INTO TonKho (MaKho, MaSP, SoLuongTonKho) 
+                VALUES (@MaKhoDich, @MaSP, @SoLuongChuyen);
             END
         END
 
         -- Cam ket luu thay doi vat ly (Atomicity & Durability)
         COMMIT TRANSACTION;
         PRINT N'=== THANH CONG: Dieu chuyen ' + CAST(@SoLuongChuyen AS VARCHAR)
-            + N' ' + @MaSanPham
+            + N' ' + @MaSP
             + N' tu ' + @MaKhoNguon + N' sang ' + @MaKhoDich + N' ===';
     END TRY
     BEGIN CATCH
         -- Thu hoi toan bo neu phat sinh loi
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
         DECLARE @ErrorMsg NVARCHAR(4000) = ERROR_MESSAGE();
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
         RAISERROR(@ErrorMsg, 16, 1);
     END CATCH
-
-    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 END;
 GO
 
 -- 📌 [PROCEDURE 2]: Giao tác tiêu hủy hàng hỏng (Kiểm tra, trừ kho K02, tính tiền lỗ)
 CREATE PROCEDURE sp_GiaoTacHuyHang
     @MaPhieuHuy VARCHAR(50),
-    @MaSanPham VARCHAR(50),
+    @MaSP VARCHAR(10),
     @SoLuongHuy INT,
     @LyDo NVARCHAR(255)
 AS
@@ -267,9 +220,9 @@ BEGIN
     BEGIN TRY
         -- 1. Kiểm tra tồn kho tại quầy K02 (Có khóa hàng độc quyền XLOCK)
         DECLARE @TonK02 INT;
-        SELECT @TonK02 = SoLuong 
+        SELECT @TonK02 = SoLuongTonKho 
         FROM TonKho WITH (XLOCK, ROWLOCK)
-        WHERE MaKho = 'K02' AND MaSanPham = @MaSanPham;
+        WHERE MaKho = 'K02' AND MaSP = @MaSP;
 
         IF @TonK02 IS NULL OR @TonK02 < @SoLuongHuy
         BEGIN
@@ -278,12 +231,12 @@ BEGIN
 
         -- 2. Gọi Function tính số tiền thiệt hại (Tính nhất quán Consistency)
         DECLARE @TienThietHai DECIMAL(18, 2);
-        SET @TienThietHai = dbo.fn_TinhTienLoHuyHang(@MaSanPham, @SoLuongHuy);
+        SET @TienThietHai = dbo.fn_TinhTienLoHuyHang(@MaSP, @SoLuongHuy);
 
         -- 3. Cập nhật giảm trừ số lượng tồn kho của món bị hỏng trên kệ
         UPDATE TonKho 
-        SET SoLuong = SoLuong - @SoLuongHuy 
-        WHERE MaKho = 'K02' AND MaSanPham = @MaSanPham;
+        SET SoLuongTonKho = SoLuongTonKho - @SoLuongHuy 
+        WHERE MaKho = 'K02' AND MaSP = @MaSP;
 
         -- 4. Tạo tiêu đề phiếu hủy nếu là mặt hàng lỗi đầu tiên của phiếu này
         IF NOT EXISTS (SELECT 1 FROM PhieuHuy WHERE MaPhieuHuy = @MaPhieuHuy)
@@ -293,8 +246,8 @@ BEGIN
         END
 
         -- 5. Thêm thông tin vào bảng chi tiết hủy hàng (Sẽ kích hoạt Trigger kiểm tra)
-        INSERT INTO ChiTietPhieuHuy (MaPhieuHuy, MaSanPham, SoLuongHuy, TienLo)
-        VALUES (@MaPhieuHuy, @MaSanPham, @SoLuongHuy, @TienThietHai);
+        INSERT INTO ChiTietPhieuHuy (MaPhieuHuy, MaSP, SoLuongHuy, TienLo)
+        VALUES (@MaPhieuHuy, @MaSP, @SoLuongHuy, @TienThietHai);
 
         -- 6. Tích lũy tổng tiền lỗ cập nhật lại cho Admin theo dõi
         UPDATE PhieuHuy 
@@ -302,11 +255,13 @@ BEGIN
         WHERE MaPhieuHuy = @MaPhieuHuy;
 
         COMMIT TRANSACTION;
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
         PRINT N'=== THÀNH CÔNG: Xử lý tiêu hủy hàng hỏng thành công. ===';
     END TRY
     BEGIN CATCH
-        ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
         DECLARE @ErrorMsg NVARCHAR(4000) = ERROR_MESSAGE();
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
         RAISERROR(@ErrorMsg, 16, 1);
     END CATCH
 END;
@@ -317,14 +272,14 @@ CREATE VIEW v_DanhSachHuyHang AS
 SELECT 
     YEAR(p.NgayHuy) AS NamHuy,
     MONTH(p.NgayHuy) AS ThangHuy,
-    ct.MaSanPham,
-    s.TenSanPham,
+    ct.MaSP,
+    s.TenSP,
     SUM(ct.SoLuongHuy) AS TongSoLuongHuy,
     SUM(ct.TienLo) AS TongThietHaiDoanhThu
 FROM PhieuHuy p
 INNER JOIN ChiTietPhieuHuy ct ON p.MaPhieuHuy = ct.MaPhieuHuy
-INNER JOIN SanPham s ON ct.MaSanPham = s.MaSanPham
-GROUP BY YEAR(p.NgayHuy), MONTH(p.NgayHuy), ct.MaSanPham, s.TenSanPham;
+INNER JOIN SanPham s ON ct.MaSP = s.MaSP
+GROUP BY YEAR(p.NgayHuy), MONTH(p.NgayHuy), ct.MaSP, s.TenSP;
 GO
 
 
@@ -333,17 +288,17 @@ GO
 -- =================================================================================
 
 -- Kịch bản 1: Điều chuyển 20 sản phẩm sữa 'SP001' từ Kho tổng K01 sang Kho quầy K02
-EXEC sp_DieuChuyenKhoNoiBo @MaSanPham = 'SP001', @SoLuongChuyen = 20;
+EXEC sp_DieuChuyenKhoNoiBo @MaSP = 'SP001', @SoLuongChuyen = 20;
 
 -- Kịch bản 2: Nhân viên phát hiện sữa trên quầy K02 bị móp méo do chuột cắn, thực hiện hủy 3 hộp
 EXEC sp_GiaoTacHuyHang 
     @MaPhieuHuy = 'PH001', 
-    @MaSanPham = 'SP001', 
+    @MaSP = 'SP001', 
     @SoLuongHuy = 3, 
     @LyDo = N'Hộp móp méo, nghi bị chuột cắn phá';
 
 -- Kịch bản 3: Thử nghiệm vi phạm Trigger (Hủy số lượng nhập sai bằng 0) -> Sẽ văng lỗi chặn lại
--- EXEC sp_GiaoTacHuyHang @MaPhieuHuy = 'PH002', @MaSanPham = 'SP002', @SoLuongHuy = 0, @LyDo = N'Nhập lỗi';
+-- EXEC sp_GiaoTacHuyHang @MaPhieuHuy = 'PH002', @MaSP = 'SP002', @SoLuongHuy = 0, @LyDo = N'Nhập lỗi';
 
 -- Kịch bản 4: Xem kết quả thống kê thông qua VIEW của hệ thống
 SELECT * FROM v_DanhSachHuyHang;

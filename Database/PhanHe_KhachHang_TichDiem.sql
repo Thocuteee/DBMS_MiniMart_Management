@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 --   PHÂN HỆ: KHÁCH HÀNG & TÍCH ĐIỂM THƯỞNG
 --   (Đổi điểm thành tiền giảm giá trực tiếp trên hóa đơn)
 -- =============================================================================
@@ -244,17 +244,17 @@ BEGIN
 
     BEGIN TRY
 
-        -- BƯỚC 1: Đọc điểm và KHÓA DÒNG khách hàng
+        -- BƯỚC 1: Đọc tổng tiền hóa đơn và KHÓA DÒNG hóa đơn trước (tránh deadlock ngược thứ tự khóa với trigger POS)
+        SELECT @v_TongTienHD = TongTien
+        FROM   dbo.HoaDon WITH (UPDLOCK, ROWLOCK)
+        WHERE  MaHD = @p_MaHD;
+
+        -- BƯỚC 2: Đọc điểm và KHÓA DÒNG khách hàng sau
         -- ACID - ISOLATION: UPDLOCK đặt row-level lock trên dòng KH này.
         -- Session khác cùng đổi điểm cho KH này phải CHỜ đến khi ta COMMIT.
         SELECT @v_DiemHienCo = DiemTichLuy
         FROM   dbo.KhachHang WITH (UPDLOCK, ROWLOCK)
         WHERE  MaKH = @p_MaKH;
-
-        -- BƯỚC 2: Đọc tổng tiền hóa đơn và khóa dòng
-        SELECT @v_TongTienHD = TongTien
-        FROM   dbo.HoaDon WITH (UPDLOCK, ROWLOCK)
-        WHERE  MaHD = @p_MaHD;
 
         -- BƯỚC 3: Kiểm tra đủ điểm không?
         -- ACID - CONSISTENCY: Ngăn điểm tích lũy giảm xuống âm

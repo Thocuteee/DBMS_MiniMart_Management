@@ -16,7 +16,6 @@ public class JwtUtils {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    // Default expiration: 24 hours
     private final int jwtExpirationMs = 86400000;
 
     private Key getSigningKey() {

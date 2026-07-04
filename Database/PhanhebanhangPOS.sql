@@ -28,7 +28,7 @@ BEGIN
         DECLARE @TonKhoHienTai INT;
 
         SELECT @TonKhoHienTai = SoLuongTonKho 
-        FROM TonKho 
+        FROM TonKho WITH (UPDLOCK, ROWLOCK)
         WHERE MaKho = @MaKho AND MaSP = @MaSP;
 
         IF @TonKhoHienTai IS NULL OR @TonKhoHienTai < @SoLuong

@@ -11,9 +11,9 @@ import java.util.List;
 public class TonKhoRepository {
     public List<TonKhoResponse> findByKho(String maKho) throws SQLException {
         List<TonKhoResponse> list = new ArrayList<>();
-        String sql = "SELECT tk.*, k.TenKho, sp.TenSP FROM TonKho tk " +
-                    "JOIN Kho k ON tk.MaKho = k.MaKho " +
-                    "JOIN SanPham sp ON tk.MaSP = sp.MaSP WHERE tk.MaKho = ?";
+        String sql = "SELECT tk.*, k.TenKho, sp.TenSP FROM TonKho tk WITH (NOLOCK) " +
+                    "JOIN Kho k WITH (NOLOCK) ON tk.MaKho = k.MaKho " +
+                    "JOIN SanPham sp WITH (NOLOCK) ON tk.MaSP = sp.MaSP WHERE tk.MaKho = ?";
         try (Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, maKho);
@@ -34,9 +34,9 @@ public class TonKhoRepository {
 
     public List<TonKhoResponse> findAll() throws SQLException {
         List<TonKhoResponse> list = new ArrayList<>();
-        String sql = "SELECT tk.*, k.TenKho, sp.TenSP FROM TonKho tk " +
-                    "JOIN Kho k ON tk.MaKho = k.MaKho " +
-                    "JOIN SanPham sp ON tk.MaSP = sp.MaSP";
+        String sql = "SELECT tk.*, k.TenKho, sp.TenSP FROM TonKho tk WITH (NOLOCK) " +
+                    "JOIN Kho k WITH (NOLOCK) ON tk.MaKho = k.MaKho " +
+                    "JOIN SanPham sp WITH (NOLOCK) ON tk.MaSP = sp.MaSP";
         try (Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ResultSet rs = ps.executeQuery()) {
