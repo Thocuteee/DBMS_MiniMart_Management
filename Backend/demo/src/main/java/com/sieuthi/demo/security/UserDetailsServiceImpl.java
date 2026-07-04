@@ -30,12 +30,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         try {
-            // First check if it's a NhanVien (by UserName)
             NhanVien nv = nhanVienRepository.findByUserName(username);
             if (nv != null) {
-                // Determine Role
                 String rawRole = nv.getRole();
-                String roleStr = "ROLE_NHAN_VIEN"; // Default
+                String roleStr = "ROLE_NHAN_VIEN";
 
                 if (rawRole != null) {
                     if (rawRole.equals("1") || rawRole.equalsIgnoreCase("Quản Lý") || rawRole.equalsIgnoreCase("Admin")) {
@@ -49,14 +47,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     }
                 }
 
-                if (username.equals("admin")) roleStr = "ROLE_ADMIN"; // Fallback for pure admin account
+                if (username.equals("admin")) roleStr = "ROLE_ADMIN";
 
                 List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(roleStr));
                 return new CustomUserDetails(nv.getUserName(), nv.getPassword(), authorities);
             }
 
-            // If not NhanVien, check if it's a KhachHang (by Phone)
-            // KhachHang doesn't have a dedicated password column, we assume password = phone for simplicity in this demo
             KhachHangResponse kh = khachHangRepository.findByPhone(username);
             if (kh != null) {
                 List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_KHACH_HANG"));

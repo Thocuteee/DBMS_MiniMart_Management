@@ -3,6 +3,7 @@ package com.sieuthi.demo.service.impl;
 import com.sieuthi.demo.dto.response.TonKhoResponse;
 import com.sieuthi.demo.repository.TonKhoRepository;
 import com.sieuthi.demo.service.TonKhoService;
+import com.sieuthi.demo.dto.request.DieuChuyenRequest;
 import org.springframework.stereotype.Service;
 import java.sql.SQLException;
 import java.util.List;
@@ -30,6 +31,15 @@ public class TonKhoServiceImpl implements TonKhoService {
             return tonKhoRepository.findAll();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi truy vấn toàn bộ tồn kho: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void dieuChuyen(DieuChuyenRequest req) {
+        try {
+            tonKhoRepository.dieuChuyen(req.getMaSP(), req.getSoLuongChuyen(), req.getMaKhoNguon(), req.getMaKhoDich());
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
         }
     }
 }

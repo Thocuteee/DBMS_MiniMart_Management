@@ -10,6 +10,7 @@ import Products from './pages/KhoSanPham/Products';
 import Suppliers from './pages/KhoSanPham/Suppliers';
 import Imports from './pages/NhapKho/Imports';
 import Warehouse from './pages/KhoSanPham/Warehouse';
+import WarehouseTransfer from './pages/KhoSanPham/WarehouseTransfer';
 import POS from './pages/BanHang/POS';
 import Orders from './pages/BanHang/Orders';
 
@@ -51,6 +52,7 @@ function App() {
           <Route path="products" element={<Products />} />
           <Route path="imports" element={<Imports />} />
           <Route path="warehouse" element={<Warehouse />} />
+          <Route path="warehouse-transfer" element={<WarehouseTransfer />} />
           <Route path="employees" element={<KhachHangNhanVien defaultTab="nhanvien" />} />
           <Route path="categories" element={<Categories />} />
           <Route path="suppliers" element={<Suppliers />} />

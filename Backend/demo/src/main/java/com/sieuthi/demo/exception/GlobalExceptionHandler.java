@@ -10,6 +10,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+        ex.printStackTrace();
         Map<String, Object> errors = new HashMap<>();
         errors.put("status", false);
         errors.put("message", ex.getMessage()); 

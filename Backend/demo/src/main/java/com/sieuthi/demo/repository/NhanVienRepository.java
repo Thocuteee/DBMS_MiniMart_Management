@@ -96,7 +96,6 @@ public class NhanVienRepository {
                         int currentNum = Integer.parseInt(maxMaNV.substring(2));
                         return String.format("NV%03d", currentNum + 1);
                     } catch (NumberFormatException e) {
-                        // ignore and default
                     }
                 }
             }

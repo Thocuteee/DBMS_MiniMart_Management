@@ -14,7 +14,8 @@
   height: 70px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -23,6 +24,7 @@
   font-weight: 700;
   color: var(--primary);
   letter-spacing: 1px;
+  margin: 0;
 }
 
 .sidebar-menu {
@@ -104,4 +106,60 @@
 .sidebar-menu::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 4px;
+}
+
+/* Collapse toggle button */
+.collapse-toggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.collapse-toggle:hover {
+  background-color: var(--sidebar-item-active-bg);
+  color: var(--primary);
+}
+
+/* Collapsed Sidebar Styles */
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar.collapsed .sidebar-header {
+  padding: 0;
+  justify-content: center;
+}
+
+.sidebar.collapsed .collapse-toggle {
+  margin-left: 0;
+}
+
+.sidebar.collapsed .menu-label {
+  display: none;
+}
+
+.sidebar.collapsed .nav-link {
+  justify-content: center;
+  padding: 0.75rem 0;
+  gap: 0;
+}
+
+.sidebar.collapsed .nav-link span {
+  display: none;
+}
+
+.sidebar.collapsed .nav-link svg:last-child {
+  display: none;
+}
+
+.sidebar.collapsed .sub-menu {
+  display: none;
 }

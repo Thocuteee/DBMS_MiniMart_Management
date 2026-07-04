@@ -5,16 +5,22 @@ import './KhoSanPham.css'; // Reuse existing CSS for container
 
 const Warehouse = () => {
   const [warehouseData, setWarehouseData] = useState([]);
+  const [imports, setImports] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchWarehouse = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8080/api/v1/ton-kho', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setWarehouseData(response.data);
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const [tonKhoRes, importsRes] = await Promise.all([
+        axios.get('http://localhost:8080/api/v1/ton-kho', { headers }),
+        axios.get('http://localhost:8080/api/v1/nhap-kho', { headers })
+      ]);
+      
+      setWarehouseData(tonKhoRes.data);
+      setImports(importsRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -27,8 +33,20 @@ const Warehouse = () => {
   }, []);
 
   const totalItems = warehouseData.reduce((acc, curr) => acc + curr.soLuongTonKho, 0);
-  const totalValueMock = totalItems * 15; // Mock average price
-  const spaceUtil = 68; // Mock percentage
+  const totalValue = warehouseData.reduce((acc, curr) => acc + (curr.soLuongTonKho * (curr.giaBan || 0)), 0);
+  
+  // Expiry check: within 30 days
+  const nearExpiryCount = warehouseData.filter(item => {
+    if (!item.hanSuDung) return false;
+    const expiryDate = new Date(item.hanSuDung);
+    const today = new Date();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(today.getDate() + 30);
+    return expiryDate <= thirtyDaysFromNow;
+  }).length;
+
+  const spaceUtil = Math.min(100, Math.round((totalItems / 2500) * 100));
+  const maxStock = Math.max(...warehouseData.map(d => d.soLuongTonKho), 100);
 
   return (
     <div className="kho-san-pham-container">
@@ -60,7 +78,7 @@ const Warehouse = () => {
               <div className="d-flex justify-content-between align-items-start mb-2">
                 <div>
                   <p className="text-muted text-uppercase small fw-bold mb-1">Tổng giá trị tồn</p>
-                  <h3 className="fw-bold mb-0">${totalValueMock.toLocaleString('en-US')}</h3>
+                  <h3 className="fw-bold mb-0">{totalValue.toLocaleString('vi-VN')} đ</h3>
                 </div>
                 <div className="p-2 bg-primary bg-opacity-10 text-primary rounded"><Box size={20}/></div>
               </div>
@@ -78,12 +96,16 @@ const Warehouse = () => {
               <div className="d-flex justify-content-between align-items-start mb-2">
                 <div>
                   <p className="text-muted text-uppercase small fw-bold mb-1">Sắp hết hạn</p>
-                  <h3 className="fw-bold mb-0">12 Món</h3>
+                  <h3 className="fw-bold mb-0">{nearExpiryCount} Món</h3>
                 </div>
                 <div className="p-2 bg-danger bg-opacity-10 text-danger rounded"><AlertTriangle size={20}/></div>
               </div>
               <div className="mt-3">
-                <span className="text-danger fw-bold small">Cần xử lý ngay</span>
+                {nearExpiryCount > 0 ? (
+                  <span className="text-danger fw-bold small">Cần xử lý ngay</span>
+                ) : (
+                  <span className="text-success fw-bold small">An toàn</span>
+                )}
               </div>
             </div>
           </div>
@@ -94,13 +116,13 @@ const Warehouse = () => {
             <div className="card-body d-flex flex-column justify-content-between">
               <div className="d-flex justify-content-between align-items-start mb-2">
                 <div>
-                  <p className="text-muted text-uppercase small fw-bold mb-1">Đang giao đến</p>
-                  <h3 className="fw-bold mb-0">5 Đơn</h3>
+                  <p className="text-muted text-uppercase small fw-bold mb-1">Đơn nhập kho</p>
+                  <h3 className="fw-bold mb-0">{imports.length} Phiếu</h3>
                 </div>
                 <div className="p-2 bg-warning bg-opacity-10 text-warning rounded"><Truck size={20}/></div>
               </div>
               <div className="mt-3">
-                <span className="text-muted fw-medium small">Dự kiến hôm nay</span>
+                <span className="text-muted fw-medium small">Tổng số phiếu nhập</span>
               </div>
             </div>
           </div>
@@ -157,12 +179,9 @@ const Warehouse = () => {
                 <tr><td colSpan="5" className="text-center py-5 text-muted">Không có dữ liệu tồn kho.</td></tr>
               ) : (
                 warehouseData.map((item, idx) => {
-                  const maxCapacity = 100;
-                  const percentage = Math.min((item.soLuongTonKho / maxCapacity) * 100, 100);
+                  const percentage = Math.min((item.soLuongTonKho / maxStock) * 100, 100);
                   const isLow = item.soLuongTonKho < 10;
-                  const mockDate = new Date();
-                  mockDate.setDate(mockDate.getDate() + (idx * 5) - 2);
-                  const isExpired = mockDate < new Date();
+                  const isExpired = item.hanSuDung ? new Date(item.hanSuDung) < new Date() : false;
 
                   return (
                     <tr key={idx}>
@@ -178,7 +197,7 @@ const Warehouse = () => {
                         </div>
                       </td>
                       <td className="py-3">
-                        <div className="fw-medium text-dark">Hàng tiêu dùng</div>
+                        <div className="fw-medium text-dark">{item.tenLoai || 'Chưa phân loại'}</div>
                         <div className="text-muted small">Khu vực: {item.tenKho}</div>
                       </td>
                       <td className="py-3">
@@ -197,7 +216,7 @@ const Warehouse = () => {
                       </td>
                       <td className="pe-4 py-3 text-end">
                         <span className={`fw-semibold small ${isExpired ? 'text-danger' : 'text-secondary'}`}>
-                          {mockDate.toLocaleDateString('vi-VN')}
+                          {item.hanSuDung ? new Date(item.hanSuDung).toLocaleDateString('vi-VN') : 'N/A'}
                         </span>
                       </td>
                     </tr>
