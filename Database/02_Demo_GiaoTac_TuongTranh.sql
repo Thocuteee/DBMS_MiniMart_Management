@@ -25,7 +25,9 @@ GO
 --        Nếu Giao tác 1 bị ROLLBACK, dữ liệu Giao tác 2 đã đọc là dữ liệu ảo (bẩn).
 -- ---------------------------------------------------------------------------------
 
-/*
+-- Tk:duy1 MK: 123456
+
+
 --- [TAB 1] ---
 BEGIN TRAN;
     UPDATE TonKho 
@@ -33,12 +35,12 @@ BEGIN TRAN;
     WHERE MaKho = 'K02' AND MaSP = 'SP001';
 
     -- Đợi 8 giây để Tab 2 chạy đọc bẩn
-    WAITFOR DELAY '00:00:08';
+    WAITFOR DELAY '00:00:8';
 ROLLBACK TRAN;
 PRINT N'Đã ROLLBACK giao tác 1!';
-*/
 
-/*
+
+
 --- [TAB 2 - LỖI: ĐỌC BẨN] ---
 -- Thiết lập mức cô lập cho phép đọc bẩn
 SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
@@ -50,7 +52,7 @@ BEGIN TRAN;
 COMMIT TRAN;
 -- Chờ Tab 1 rollback xong, chạy lại câu lệnh dưới sẽ thấy tồn kho thực tế vẫn là 50
 -- Dẫn đến báo cáo kinh doanh bị sai lệch nghiêm trọng.
-*/
+
 
 /*
 --- [TAB 2 - GIẢI PHÁP: NGĂN ĐỌC BẨN] ---
@@ -74,8 +76,11 @@ COMMIT TRAN;
 --        Giao tác 1 đọc lại lần nữa thì thấy điểm đã thay đổi so với lần đầu.
 -- ---------------------------------------------------------------------------------
 
-/*
+
 --- [TAB 1 - LỖI: ĐỌC KHÔNG LẶP LẠI] ---
+
+-- 0945678901
+
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 BEGIN TRAN;
     -- Lần đọc 1: Đọc ra điểm của KH002 (ví dụ: 200 điểm)
@@ -91,7 +96,7 @@ BEGIN TRAN;
     FROM KhachHang 
     WHERE MaKH = 'KH002';
 COMMIT TRAN;
-*/
+
 
 /*
 --- [TAB 2] ---
@@ -136,13 +141,19 @@ COMMIT TRAN;
 
 /*
 --- [TAB 1 - LỖI: LOST UPDATE] ---
+Reset tồn kho về 50
+UPDATE TonKho SET SoLuongTonKho = 50 WHERE MaKho = 'K02' AND MaSP = 'SP001';
+
+
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 BEGIN TRAN;
     DECLARE @Ton INT;
     -- Đọc ra tồn kho hiện tại (50)
     SELECT @Ton = SoLuongTonKho FROM TonKho WHERE MaKho = 'K02' AND MaSP = 'SP001';
     
-    WAITFOR DELAY '00:00:06'; -- Chờ Tab 2 đọc tồn kho cùng thời điểm
+    
+
+    WAITFOR DELAY '00:00:10'; -- Chờ Tab 2 đọc tồn kho cùng thời điểm
     
     -- Trừ kho và cập nhật (50 - 2 = 48)
     UPDATE TonKho SET SoLuongTonKho = @Ton - 2 WHERE MaKho = 'K02' AND MaSP = 'SP001';
@@ -171,13 +182,15 @@ COMMIT TRAN;
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 BEGIN TRAN;
     DECLARE @Ton INT;
-    -- Khóa cập nhật UPDLOCK trên dòng kiểm tra
+    -- Bắt buộc phải có WITH (UPDLOCK, ROWLOCK) ở đây
     SELECT @Ton = SoLuongTonKho FROM TonKho WITH (UPDLOCK, ROWLOCK) WHERE MaKho = 'K02' AND MaSP = 'SP001';
     
-    WAITFOR DELAY '00:00:06'; -- Tab 2 chạy SELECT cũng với UPDLOCK sẽ bị BLOCK, phải đợi
+    WAITFOR DELAY '00:00:08';
     
     UPDATE TonKho SET SoLuongTonKho = @Ton - 2 WHERE MaKho = 'K02' AND MaSP = 'SP001';
 COMMIT TRAN;
+
+
 */
 
 /*
@@ -185,12 +198,13 @@ COMMIT TRAN;
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 BEGIN TRAN;
     DECLARE @Ton INT;
-    -- Tab 2 bị bắt buộc dừng tại câu lệnh này để chờ Tab 1 kết thúc
+    -- Bị bắt buộc dừng tại câu lệnh này để chờ Tab 1 kết thúc (do kẹt khóa UPDLOCK)
     SELECT @Ton = SoLuongTonKho FROM TonKho WITH (UPDLOCK, ROWLOCK) WHERE MaKho = 'K02' AND MaSP = 'SP001';
     
     -- Sau khi Tab 1 commit (tồn kho còn 48), Tab 2 mới đọc được giá trị 48 và trừ tiếp
     UPDATE TonKho SET SoLuongTonKho = @Ton - 5 WHERE MaKho = 'K02' AND MaSP = 'SP001';
 COMMIT TRAN;
+
 -- Kết quả cuối cùng chính xác: Tồn kho còn 43 (50 - 2 - 5 = 43)
 */
 
@@ -203,6 +217,9 @@ COMMIT TRAN;
 --        Luồng 2 chuyển K02 -> K01 (cố khóa K02 trước, rồi K01).
 -- ---------------------------------------------------------------------------------
 
+
+-- check trên Duy1 và Duy2
+
 /*
 --- [TAB 1 - LỖI: DEADLOCK] ---
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
@@ -210,7 +227,7 @@ BEGIN TRAN;
     -- Bước 1: Khóa kho K01 trước
     SELECT SoLuongTonKho FROM TonKho WITH (XLOCK, ROWLOCK) WHERE MaKho = 'K01' AND MaSP = 'SP001';
     
-    WAITFOR DELAY '00:00:06'; -- Đợi Tab 2 khóa K02
+    WAITFOR DELAY '00:00:10'; -- Đợi Tab 2 khóa K02
     
     -- Bước 2: Cố gắng khóa kho K02 -> Bị block (chờ Tab 2) -> Gây DEADLOCK
     SELECT SoLuongTonKho FROM TonKho WITH (XLOCK, ROWLOCK) WHERE MaKho = 'K02' AND MaSP = 'SP001';
@@ -253,6 +270,9 @@ EXEC sp_DieuChuyenKhoNoiBo @MaSP = 'SP001', @SoLuongChuyen = 3, @MaKhoNguon = 'K
 --        Luồng 2 (trigger POS) khóa HoaDon -> KhachHang.
 -- ---------------------------------------------------------------------------------
 
+-- KH:   0945678901
+
+
 /*
 --- [TAB 1 - LỖI: DEADLOCK NGƯỢC THỨ TỰ KHÓA] ---
 -- Giả lập logic sp_GiaoTacDoiDiem phiên bản cũ (Khách hàng trước, Hóa đơn sau)
@@ -286,6 +306,9 @@ COMMIT TRAN;
 -- Chạy thủ tục sp_GiaoTacDoiDiem đã được chỉnh sửa thứ tự khóa dòng (HoaDon trước, KhachHang sau)
 -- Cách này giúp đồng bộ hóa với luồng cập nhật của POS và Trigger, loại bỏ deadlock.
 
+
+-- UPDATE KhachHang SET DiemTichLuy = 200 WHERE MaKH = 'KH002';
+
 DECLARE @ket_qua VARCHAR(200);
 EXEC sp_GiaoTacDoiDiem @p_MaHD = 'HD004', @p_MaKH = 'KH002', @p_SoDiemMuonDoi = 10, @p_KetQua = @ket_qua OUTPUT;
 SELECT @ket_qua AS 'Kết quả';
@@ -295,4 +318,69 @@ SELECT @ket_qua AS 'Kết quả';
 --- [TAB 2 - GIẢI PHÁP: ĐỒNG BỘ THỨ TỰ KHÓA] ---
 -- Chạy đồng thời, luồng này sẽ xếp hàng đợi một cách an toàn
 UPDATE HoaDon SET ThanhTien = 900000 WHERE MaHD = 'HD004';
+*/
+
+
+/*
+-- KỊCH BẢN 6: LỖI BÓNG MA (PHANTOM READ)
+TAB 1 - LỖI: REPEATABLE READ] ---
+-- Thiết lập mức cô lập REPEATABLE READ (mức này chỉ khóa các dòng hiện tại, không khóa dải chèn mới)
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+BEGIN TRAN;
+    -- Bước 1: Thống kê số lượng sản phẩm thuộc danh mục L02 ban đầu
+    SELECT COUNT(*) AS 'Số lượng SP L02', SUM(GiaBan) AS 'Tổng giá bán'
+    FROM SanPham 
+    WHERE MaLoai = 'L02';
+    
+    WAITFOR DELAY '00:00:06'; -- Chờ 6 giây để bạn sang Tab 2 chèn dòng mới
+    
+    -- Bước 2: Thống kê lại danh mục L02 -> Xuất hiện dòng "bóng ma" (Coca Cola)
+    SELECT COUNT(*) AS 'Số lượng SP L02', SUM(GiaBan) AS 'Tổng giá bán'
+    FROM SanPham 
+    WHERE MaLoai = 'L02';
+COMMIT TRAN;
+
+
+--- [TAB 2 - GÂY LỖI: CHÈN DÒNG BÓNG MA] ---
+
+BEGIN TRAN;
+    -- Chèn sản phẩm mới vào danh mục L02
+    INSERT INTO SanPham (MaSP, MaVach, MaLoai, TenSP, DonVi, GiaBan, HinhAnh)
+    VALUES ('SP005', '8934588012155', 'L02', N'Nước ngọt Coca Cola lon 320ml', N'Lon', 11000.0000, NULL);
+COMMIT TRAN;
+
+
+
+ --  GIẢI PHÁP: NGĂN CHẶN LỖI BÓNG MA
+
+ Bản giải pháp: Chạy chéo nhau không bị lỗi
+--- [TAB 1 - GIẢI PHÁP: NGĂN CHẶN BÓNG MA] ---
+
+-- Sử dụng cấp độ cô lập cao nhất SERIALIZABLE
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+BEGIN TRAN;
+    -- Bước 1: Thống kê số lượng sản phẩm thuộc danh mục L02
+    SELECT COUNT(*) AS 'Số lượng SP L02', SUM(GiaBan) AS 'Tổng giá bán'
+    FROM SanPham 
+    WHERE MaLoai = 'L02';
+    
+    WAITFOR DELAY '00:00:06'; -- Chờ 6 giây (Tab 2 cố chèn sản phẩm mới sẽ bị chặn lại)
+    
+    -- Bước 2: Thống kê lại danh mục L02 -> Số lượng hoàn toàn đồng nhất
+    SELECT COUNT(*) AS 'Số lượng SP L02', SUM(GiaBan) AS 'Tổng giá bán'
+    FROM SanPham 
+    WHERE MaLoai = 'L02';
+COMMIT TRAN;
+
+
+[TAB 2 - GIẢI PHÁP: CHÈN SẢN PHẨM MỚI] ---
+
+BEGIN TRAN;
+    -- Cố gắng chèn sản phẩm mới (Sẽ bị BLOCK xếp hàng đợi)
+    INSERT INTO SanPham (MaSP, MaVach, MaLoai, TenSP, DonVi, GiaBan, HinhAnh)
+    VALUES ('SP006', '8934588012166', 'L02', N'Nước ngọt Fanta cam lon 320ml', N'Lon', 10000.0000, NULL);
+COMMIT TRAN;
+
+ LỆNH DỌN DẸP DỮ LIỆU SAU DEMO
+ DELETE FROM SanPham WHERE MaSP IN ('SP005', 'SP006');
 */
