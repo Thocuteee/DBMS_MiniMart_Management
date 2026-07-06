@@ -1,11 +1,6 @@
-/*
+﻿/*
 ================================================================================
-  PHAN HE QUAN LY NHAP KHO - DUYET HANG TU NHA CUNG CAP
-  Nguoi thuc hien : Duy
-  Co so du lieu   : QuanLySieuThiMini
-  Mo ta           : Quan ly dau vao sieu thi - Duyet hoa don nhap hang,
-                    chan hang het HSD, tu dong cap nhat TonKho.
-================================================================================
+
   Danh sach doi tuong:
     [1] FUNCTION   : fn_KiemTraHanSuDung   - Kiem tra & tinh so ngay con lai HSD
     [2] VIEW       : v_BaoCaoNhapKho        - Bao cao lo hang nhap & doi soat NCC
@@ -20,11 +15,7 @@
     I - Isolation    : SERIALIZABLE (SET TRANSACTION ISOLATION LEVEL)
     D - Durability   : COMMIT; du lieu ghi vao dia vinh vien sau COMMIT
 ================================================================================
-  LICH SU CHINH SUA:
-    2026-06-18 : XOA trigger trg_CapNhatTonKho (gan cung K01 - loi chi mang)
-                 Them tham so @MaKho vao sp_GiaoTacNhapKho
-                 Chuyen logic MERGE TonKho vao trong giao tac cua SP
-================================================================================
+
 */
 
 USE [QuanLySieuThiMini];
